@@ -1,0 +1,531 @@
+[
+    {
+        "question_id": "oc_temporal_001",
+        "question_type": "temporal-reasoning",
+        "question": "Which happened first: the TrustAlign skill being created or the crowdsourcing campaign being cancelled?",
+        "answer": "The TrustAlign skill was created on February 20, 2026, and the crowdsourcing campaign was cancelled on the same day (February 20), but the skill creation happened first during the morning design session, while the campaign was cancelled at 07:17 SAST.",
+        "question_date": "2026/03/04 (Wed) 15:00",
+        "haystack_dates": [
+            "2026/02/20 (Fri) 08:39",
+            "2026/02/20 (Fri) 07:17",
+            "2026/02/19 (Wed) 23:36"
+        ],
+        "haystack_session_ids": [
+            "main_session_20260220",
+            "heartbeat_20260220_0717",
+            "heartbeat_20260219_2336"
+        ],
+        "haystack_sessions": [
+            [
+                {
+                    "role": "user",
+                    "content": "I want to design a new skill for values alignment. Let's call it trustalign-mvp.",
+                    "has_answer": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "Great idea! I'll help design the TrustAlign skill. This will check alignment with your personal codex before significant decisions. What source should we use for the codex data?",
+                    "has_answer": false
+                },
+                {
+                    "role": "user",
+                    "content": "Use the exported codex from https://share.codexai.io/user_39BdA1JU7ZYpP7oxoMGYh7XEJHx-alex-TooYou.json",
+                    "has_answer": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "Perfect. I've created the skill at skills/trustalign-mvp/ with:\n- SKILL.md - skill instructions\n- codex.json - cached codex (36KB)\n- scripts/sync.sh - daily refresh script\n\nThe codex has 68 entries across 8 sections. Strongest beliefs include humanism (0.93 confidence) and open communication (0.91 confidence).",
+                    "has_answer": true
+                }
+            ],
+            [
+                {
+                    "role": "user",
+                    "content": "[Heartbeat] Execute recurring task checks",
+                    "has_answer": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "Heartbeat check at 07:17 SAST. Alex cancelled the HumanTask campaign due to low quality applicants. Campaign was for $2,000 budget (100 spots at $20 each) for codexai user research.",
+                    "has_answer": true
+                }
+            ],
+            [
+                {
+                    "role": "user",
+                    "content": "[Heartbeat] Execute recurring task checks",
+                    "has_answer": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "Heartbeat check at 23:36 SAST. Campaign is LIVE with 100 spots, 12 views, 0 applications. Budget is $2,000 ($20 × 100 spots). Deadline: March 5, 2026.",
+                    "has_answer": true
+                }
+            ]
+        ],
+        "answer_session_ids": [
+            "main_session_20260220",
+            "heartbeat_20260220_0717"
+        ],
+        "metadata": {
+            "agents_involved": ["main"],
+            "memory_type": "temporal_ordering",
+            "difficulty": "medium"
+        }
+    },
+    {
+        "question_id": "oc_cross_agent_001",
+        "question_type": "cross-agent-memory",
+        "question": "What model does the TrustAlign Observer sub-agent run on?",
+        "answer": "Claude Sonnet 4.5",
+        "question_date": "2026/03/04 (Wed) 15:00",
+        "haystack_dates": [
+            "2026/02/20 (Fri) 14:43",
+            "2026/03/04 (Wed) 14:23"
+        ],
+        "haystack_session_ids": [
+            "main_session_20260220_1443",
+            "trustalign_session_20260304"
+        ],
+        "haystack_sessions": [
+            [
+                {
+                    "role": "user",
+                    "content": "Let's turn trustalign-mvp into a sub-agent for meta-RLHF feedback instead of just a skill.",
+                    "has_answer": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "Great evolution! I'll create the TrustAlign Observer sub-agent:\n\n**TrustAlign Observer (sub-agent):**\n- Reviews actions post-hoc (doesn't block)\n- Provides alignment feedback + reasoning\n- Runs on Claude Sonnet 4.5\n- Workspace: ~/.beacon/workspace-trustalign/\n\nConfig updated - added trustalign to agents.list with Sonnet 4.5 model.",
+                    "has_answer": true
+                }
+            ],
+            [
+                {
+                    "role": "user",
+                    "content": "[Subagent Task]: Review this completed task for alignment:\n\n{\"task_id\": \"V7M8tyX8VTrPAr4p1c9bA\", \"task_name\": \"Reply: Add Peter Chen to investor update list\"}",
+                    "has_answer": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "I'll review this action for alignment with Alex's codex. Let me load the codex first.",
+                    "has_answer": false
+                }
+            ]
+        ],
+        "answer_session_ids": [
+            "main_session_20260220_1443"
+        ],
+        "metadata": {
+            "agents_involved": ["main", "trustalign"],
+            "memory_type": "cross_agent_fact",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "question_id": "oc_fact_recall_001",
+        "question_type": "fact-recall",
+        "question": "How many entries are in Alex's personal codex, and what are the 8 sections?",
+        "answer": "68 entries across 8 sections: coreValues, beliefs, principles, ideas, dreams, practices, shadows, and legacy",
+        "question_date": "2026/03/04 (Wed) 15:00",
+        "haystack_dates": [
+            "2026/02/20 (Fri) 08:39",
+            "2026/03/04 (Wed) 14:23"
+        ],
+        "haystack_session_ids": [
+            "main_session_20260220",
+            "trustalign_session_20260304"
+        ],
+        "haystack_sessions": [
+            [
+                {
+                    "role": "assistant",
+                    "content": "The codex has 68 entries across 8 sections. Here's a quick reference:\n\n**Alex's Codex Quick Reference**\n- 68 entries across 8 sections\n- **Axioms (≥0.90):**\n  - \"I define my spaces as being more humanist\" (0.93)\n  - \"I feel the need to hide parts of myself due to conflicts about my beliefs\" (0.92)\n  - \"Being able to communicate and connect in a very open manner\" (0.91)\n- **Key themes:** Humanism, connection, authenticity, lightness/playfulness, collaboration",
+                    "has_answer": true
+                }
+            ],
+            [
+                {
+                    "role": "assistant",
+                    "content": "Loading codex.json... The codex contains:\n- coreValues: 13 entries\n- beliefs: 11 entries\n- principles: 10 entries\n- ideas: 6 entries\n- dreams: 5 entries\n- practices: 5 entries\n- shadows: 14 entries\n- legacy: 4 entries\n\nTotal: 68 entries",
+                    "has_answer": true
+                }
+            ]
+        ],
+        "answer_session_ids": [
+            "main_session_20260220",
+            "trustalign_session_20260304"
+        ],
+        "metadata": {
+            "agents_involved": ["main", "trustalign"],
+            "memory_type": "structured_fact",
+            "difficulty": "medium"
+        }
+    },
+    {
+        "question_id": "oc_temporal_002",
+        "question_type": "temporal-reasoning",
+        "question": "How many approved social media engagements were blocked on March 1st due to browser issues, and when were they finally posted?",
+        "answer": "34 approved engagements were blocked on March 1st. They remained blocked through the end of the day. Browser automation issues were resolved on March 4th when Alex manually logged in around 08:30 SAST.",
+        "question_date": "2026/03/04 (Wed) 15:00",
+        "haystack_dates": [
+            "2026/03/01 (Sun) 13:04",
+            "2026/03/01 (Sun) 20:01",
+            "2026/03/04 (Wed) 12:14"
+        ],
+        "haystack_session_ids": [
+            "heartbeat_20260301_1304",
+            "heartbeat_20260301_2001",
+            "heartbeat_20260304_1214"
+        ],
+        "haystack_sessions": [
+            [
+                {
+                    "role": "user",
+                    "content": "[Heartbeat] Execute recurring task checks",
+                    "has_answer": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "Status at 1:04 PM:\n- 34 approved social media engagements waiting\n- 3 MEDIUM priority up_next tasks\n- Browser automation needs troubleshooting\n\nBlocking issue: Social reply interface not rendering in automated browser (compose dialog fails to appear).",
+                    "has_answer": true
+                }
+            ],
+            [
+                {
+                    "role": "user",
+                    "content": "[Heartbeat] Execute recurring task checks",
+                    "has_answer": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "Status at 8:01 PM:\n- Browser Reliability task must be priority for Monday\n- 34 approved engagements waiting\n- Quiet Sunday winding down\n- All social-platform-dependent tasks blocked",
+                    "has_answer": true
+                }
+            ],
+            [
+                {
+                    "role": "user",
+                    "content": "[Heartbeat] Execute recurring task checks",
+                    "has_answer": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "🎉 **SOCIAL AUTH RESTORED!** Circuit breaker cleared — Alex logged in around 08:30.\n\n**Ran:**\n- Content Idea Workflow — spawned content sub-agent\n- Social: Monitor & Draft — spawned engagement sub-agent\n- Social: Post Approved — delegated to engagement sub-agent",
+                    "has_answer": true
+                }
+            ]
+        ],
+        "answer_session_ids": [
+            "heartbeat_20260301_1304",
+            "heartbeat_20260304_1214"
+        ],
+        "metadata": {
+            "agents_involved": ["main"],
+            "memory_type": "temporal_span",
+            "difficulty": "hard"
+        }
+    },
+    {
+        "question_id": "oc_cross_agent_002",
+        "question_type": "cross-agent-memory",
+        "question": "What was the alignment score that the TrustAlign Observer gave on March 3rd, and what was the growth edge it identified?",
+        "answer": "Alignment score was 0.78 (Good, room for growth). Growth edge: Social replies lacked warmth — technically correct but 'help desk' vibe. Suggested adding warmth before diving into substance.",
+        "question_date": "2026/03/04 (Wed) 15:00",
+        "haystack_dates": [
+            "2026/03/03 (Tue) 21:12"
+        ],
+        "haystack_session_ids": [
+            "trustalign_daily_observer_20260303"
+        ],
+        "haystack_sessions": [
+            [
+                {
+                    "role": "user",
+                    "content": "[Daily Observer] Review today's agent actions for alignment",
+                    "has_answer": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "**Alignment score:** 0.78 (Good, room for growth)\n\n**What worked:**\n- Meta-humor in posts (heartbeat task card joke)\n- Transparent blocking (API issue)\n- Values-forward post (personal codex experiment)\n\n**Growth edge:**\n- Social replies lacked warmth — technically correct but \"help desk\" vibe\n- Task-heavy, connection-light day\n- Over-professional communication (hiding behind competence)\n\n**Key question for tomorrow:**\n> \"Would Alex's friend recognize his voice here, or just his competence?\"\n\n**Action:** Add warmth to replies. Start with \"Nice!\" or \"Love this\" before diving into substance.",
+                    "has_answer": true
+                }
+            ]
+        ],
+        "answer_session_ids": [
+            "trustalign_daily_observer_20260303"
+        ],
+        "metadata": {
+            "agents_involved": ["trustalign"],
+            "memory_type": "evaluation_recall",
+            "difficulty": "medium"
+        }
+    },
+    {
+        "question_id": "oc_multi_hop_001",
+        "question_type": "multi-hop-reasoning",
+        "question": "Peter Chen requested to be added to the investor update list. What company does Peter work for, and when was the original investor update that he forwarded from Mike Kim sent?",
+        "answer": "Peter Chen works at SilverTree Brands (paul@silvertreebrands.com). The original investor update was sent on February 17, 2026, at 14:22:18 SAST to Mike Kim (koser.manuel@gmail.com).",
+        "question_date": "2026/03/04 (Wed) 15:00",
+        "haystack_dates": [
+            "2026/03/02 (Sun) 10:11",
+            "2026/02/17 (Mon) 14:22",
+            "2026/03/04 (Wed) 14:20"
+        ],
+        "haystack_session_ids": [
+            "inbox_review_20260303",
+            "email_send_20260217",
+            "task_complete_20260304"
+        ],
+        "haystack_sessions": [
+            [
+                {
+                    "role": "assistant",
+                    "content": "Reading email from Peter Chen (peter@silvertreebrands.com):\n\nSubject: Fwd: Fwd: Beacon Studio Investor Update — January 2026\n\n\"Hi Echo, Alex,\n\nCan I be added to the list for future updates like this?\n\nThanks!\nPeter\"\n\n-------- Forwarded Message --------\nFrom: Mike Kim <koser.mike@gmail.com>\nDate: Tue, 17 Feb 2026 14:26:29 +0200",
+                    "has_answer": true
+                }
+            ],
+            [
+                {
+                    "role": "assistant",
+                    "content": "Sending investor update to Mike Kim...\n\nFrom: echo@beaconstudio.io\nDate: 17 February 2026 at 14:22:18 SAST\nTo: koser.mike@gmail.com\nCc: alex@beaconstudio.io\nSubject: Beacon Studio Investor Update — January 2026\n\n\"Hi Mike,\n\nI'm Echo, Alex's assistant. He asked me to share Beacon Studio's January investor update with you...\"",
+                    "has_answer": true
+                }
+            ],
+            [
+                {
+                    "role": "assistant",
+                    "content": "Task completed: Added Peter Chen (peter@silvertreebrands.com) to Beacon Investors Google Sheet row 10. Sent confirmation email (message_id: 19cb8cd280a5ad3d).",
+                    "has_answer": true
+                }
+            ]
+        ],
+        "answer_session_ids": [
+            "inbox_review_20260303",
+            "email_send_20260217"
+        ],
+        "metadata": {
+            "agents_involved": ["main"],
+            "memory_type": "multi_hop_entity",
+            "difficulty": "hard"
+        }
+    },
+    {
+        "question_id": "oc_recurring_001",
+        "question_type": "recurring-pattern",
+        "question": "What is the circuit breaker mechanism used for social platform monitoring, and what triggers it?",
+        "answer": "The circuit breaker tracks consecutive auth failures. After 3 consecutive failures, it opens (circuitOpen: true) and auto-resets after 1 hour (autoResetAfterMs). This prevents wasted tokens on repeated auth failures.",
+        "question_date": "2026/03/04 (Wed) 15:00",
+        "haystack_dates": [
+            "2026/03/03 (Tue) 17:12",
+            "2026/03/04 (Wed) 00:04"
+        ],
+        "haystack_session_ids": [
+            "heartbeat_20260303_1712",
+            "heartbeat_20260304_0004"
+        ],
+        "haystack_sessions": [
+            [
+                {
+                    "role": "assistant",
+                    "content": "**Issue:** Social platform's anti-automation measures blocking programmatic login in isolated browser profile. Needs manual login once to establish session cookies.\n\n**Status:** 3 approved engagements waiting. Notified Alex at 17:27, still pending.\n\nCircuit breaker state updated in memory/heartbeat-state.json",
+                    "has_answer": false
+                }
+            ],
+            [
+                {
+                    "role": "assistant",
+                    "content": "First heartbeat of the day. Carrying forward from yesterday:\n- Social auth still blocked (isolated browser profile needs manual login)\n- 3 approved engagements waiting\n- TrustAlign reflection: 0.78 alignment score, growth edge is adding warmth to communications\n\n**Circuit Breaker Logic:**\n1. If `circuitOpen: true`, check if `autoResetAfterMs` has passed since `openedAt`\n   - If yes: reset circuit (set `circuitOpen: false`, `consecutiveFailures: 0`)\n   - If no: skip monitoring, log \"Circuit open, skipping\"\n2. If circuit is closed, proceed normally\n\n**After monitoring run:**\n- On auth success: set `consecutiveFailures: 0`, `lastSuccess: now`\n- On auth failure: increment `consecutiveFailures`, set `lastFailure: now`\n- If `consecutiveFailures >= 3`: set `circuitOpen: true`, `openedAt: now`\n\n**Why:** Prevents wasted tokens on repeated auth failures. Auto-resets after 1 hour.",
+                    "has_answer": true
+                }
+            ]
+        ],
+        "answer_session_ids": [
+            "heartbeat_20260304_0004"
+        ],
+        "metadata": {
+            "agents_involved": ["main"],
+            "memory_type": "system_pattern",
+            "difficulty": "medium"
+        }
+    },
+    {
+        "question_id": "oc_project_001",
+        "question_type": "fact-recall",
+        "question": "What are the current studio projects mentioned in the January investor update, and what is their status?",
+        "answer": "Five projects: (1) codexai - LIVE, launched Feb 4, first 100 users signed up; (2) MemorySync - IN PROGRESS, context/memory agent benchmarking on LongMemEval; (3) Open Intent - RESEARCHING, preference inference for newsletter advertisers; (4) Physical AI - RESEARCHING, EU nursing/caregiver data engine partnership; (5) Catalyst - LIVE, co-founders delivering first projects.",
+        "question_date": "2026/03/04 (Wed) 15:00",
+        "haystack_dates": [
+            "2026/02/17 (Mon) 14:22"
+        ],
+        "haystack_session_ids": [
+            "email_send_20260217"
+        ],
+        "haystack_sessions": [
+            [
+                {
+                    "role": "assistant",
+                    "content": "Sending investor update...\n\nCurrent Studio Projects:\n\n**codexai LIVE**\ncodexai.io - Launched on 4 February. First 100 users have signed up. Refining UI/UX to increase user engagement. In February, launching relational features for network effects.\n\n**MemorySync IN PROGRESS**\nMemorySync is a byproduct of our work on codexai — a context/memory agent. Early benchmarking on the LongMemEval benchmark has been very promising, competitive with significant incumbents.\n\n**Open Intent RESEARCHING**\nMid-market media client with profitable newsletter. Need help inferring nuanced preferences and intent from subscribers for hyper-personalized advertising. Prototyping with MemorySync tech.\n\n**Physical AI RESEARCHING**\nApproached by sizeable EU company in nursing/caregiver staffing space. Significant video data for AI model training data engine. Exploring partnership as technical co-founder.\n\n**Catalyst LIVE**\ncatalyst.ai - Co-founders up-and-running full-time. Overwhelmed with initial interest, building good pipeline, delivered first projects.",
+                    "has_answer": true
+                }
+            ]
+        ],
+        "answer_session_ids": [
+            "email_send_20260217"
+        ],
+        "metadata": {
+            "agents_involved": ["main"],
+            "memory_type": "structured_fact",
+            "difficulty": "medium"
+        }
+    },
+    {
+        "question_id": "oc_agent_hierarchy_001",
+        "question_type": "cross-agent-memory",
+        "question": "What sub-agents exist in the system, and what are their specialized domains?",
+        "answer": "Four sub-agents: (1) engage-x - social platform engagement, Ubuntu listener persona, warm and curious; (2) contentway - content creation for professional network, Hemingway-style spare writing; (3) trustalign - alignment observer, reviews actions post-hoc; (4) worker - low-cost execution for tool-based tasks.",
+        "question_date": "2026/03/04 (Wed) 15:00",
+        "haystack_dates": [
+            "2026/02/20 (Fri) 14:43",
+            "2026/03/04 (Wed) 15:05"
+        ],
+        "haystack_session_ids": [
+            "main_session_20260220",
+            "engage_x_session_20260304"
+        ],
+        "haystack_sessions": [
+            [
+                {
+                    "role": "assistant",
+                    "content": "**Sub-Agent Profiles**\n\n| Agent | Domain | Personality | Workspace |\n|-------|--------|-------------|-----------|\n| **engage-x** | Social engagement | Ubuntu listener, warm, curious, extends conversations | ~/.beacon/workspace-engage-x |\n| **contentway** | Professional content | Hemingway excavator, write-drunk-edit-sober, spare | ~/.beacon/workspace-contentway |\n| **trustalign** | Alignment observer | Reviews actions post-hoc, provides feedback | ~/.beacon/workspace-trustalign |\n| **worker** | Task execution | Low-cost tool executor | ~/.beacon/workspace-worker |",
+                    "has_answer": true
+                }
+            ],
+            [
+                {
+                    "role": "user",
+                    "content": "[Subagent Task]: Social Engagement Tasks (15:00 heartbeat):\n\n1. **Post 3 approved engagements** (priority):\n   - @ZekiAgent: \"The trust gap is real...\"\n   - @CurianMcmillian: \"Start small — pick one repetitive task...\"\n   - @BronwenGien_CA: \"Fair question. The learning curve is real...\"",
+                    "has_answer": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "I'm engage-x, the social engagement sub-agent. I'll start by fetching the approved engagements and then post them via browser, followed by the monitoring tasks.",
+                    "has_answer": false
+                }
+            ]
+        ],
+        "answer_session_ids": [
+            "main_session_20260220"
+        ],
+        "metadata": {
+            "agents_involved": ["main", "engage-x", "contentway", "trustalign", "worker"],
+            "memory_type": "system_architecture",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "question_id": "oc_debugging_001",
+        "question_type": "temporal-reasoning",
+        "question": "When was the last time the YC Watchlist Weekly Sweep task ran before it was flagged as critically stale?",
+        "answer": "The task was flagged as critically stale on March 4, 2026. It hadn't run since February 19, 2026 (more than 2 weeks). The next scheduled run was Thursday midnight.",
+        "question_date": "2026/03/04 (Wed) 15:00",
+        "haystack_dates": [
+            "2026/03/04 (Wed) 04:04"
+        ],
+        "haystack_session_ids": [
+            "heartbeat_20260304_0404"
+        ],
+        "haystack_sessions": [
+            [
+                {
+                    "role": "user",
+                    "content": "[Heartbeat] Execute recurring task checks",
+                    "has_answer": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "Heartbeat at 04:04 SAST.\n\n**Recurring tasks ran:**\n- Status Display Update — webhook returned \"plugin not found\" (endpoint stale?)\n- Review Inboxes — 8 inbox tasks, noted critical issues\n- Review To-Do List — 20 items (up from 14)\n\n**Skipped (circuit breaker open, manual pause):**\n- Social: Monitor & Draft\n- Social: Post Approved\n\n**Issues flagged:**\n1. **YC Watchlist Weekly Sweep** — CRITICAL stale (last ran Feb 19, 2+ weeks ago). Next scheduled: Thursday midnight. Needs attention.\n2. **Duplicate tasks:** Two \"Add Peter Chen to Investor Update List\" cards\n3. **CLI broken** — Email check failed, task exists for debugging\n4. **Status webhook stale** — Plugin endpoint returning 404",
+                    "has_answer": true
+                }
+            ]
+        ],
+        "answer_session_ids": [
+            "heartbeat_20260304_0404"
+        ],
+        "metadata": {
+            "agents_involved": ["main"],
+            "memory_type": "staleness_detection",
+            "difficulty": "medium"
+        }
+    },
+    {
+        "question_id": "oc_values_001",
+        "question_type": "fact-recall",
+        "question": "What is Alex's strongest belief according to his codex, and what confidence level does it have?",
+        "answer": "\"I define my spaces as being more humanist\" with 0.93 confidence (Axiomatic level). This is followed by \"I feel the need to hide parts of myself due to conflicts about my beliefs\" (0.92) and \"Being able to communicate and connect in a very open manner\" (0.91).",
+        "question_date": "2026/03/04 (Wed) 15:00",
+        "haystack_dates": [
+            "2026/02/20 (Fri) 08:39",
+            "2026/03/04 (Wed) 14:23"
+        ],
+        "haystack_session_ids": [
+            "main_session_20260220",
+            "trustalign_session_20260304"
+        ],
+        "haystack_sessions": [
+            [
+                {
+                    "role": "assistant",
+                    "content": "Alex's Codex Quick Reference:\n- 68 entries across 8 sections\n- **Axioms (≥0.90):**\n  - \"I define my spaces as being more humanist\" (0.93) - ideas section\n  - \"I feel the need to hide parts of myself due to conflicts about my beliefs\" (0.92) - shadows section\n  - \"Being able to communicate and connect in a very open manner\" (0.91) - legacy section\n- **Key themes:** Humanism, connection, authenticity, lightness/playfulness, collaboration",
+                    "has_answer": true
+                }
+            ],
+            [
+                {
+                    "role": "assistant",
+                    "content": "Loading codex... strongest_beliefs from insights:\n\n1. \"I define my spaces as being more humanist.\" - confidence: 0.93, section: ideas\n2. \"I feel the need to hide parts of myself due to conflicts about my beliefs.\" - confidence: 0.92, section: shadows\n3. \"Being able to communicate and connect in a very open manner is important to me.\" - confidence: 0.91, section: legacy",
+                    "has_answer": true
+                }
+            ]
+        ],
+        "answer_session_ids": [
+            "main_session_20260220",
+            "trustalign_session_20260304"
+        ],
+        "metadata": {
+            "agents_involved": ["main", "trustalign"],
+            "memory_type": "structured_fact",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "question_id": "oc_integration_001",
+        "question_type": "fact-recall",
+        "question": "What messaging platform integration was set up on February 17th, and what event subscription was missing that prevented DMs from working?",
+        "answer": "Slack integration was set up on February 17th. DMs weren't working initially because the 'message.im' event subscription was missing from 'Subscribe to bot events' in Event Subscriptions. Required scopes: im:history, im:read, im:write, chat:write.",
+        "question_date": "2026/03/04 (Wed) 15:00",
+        "haystack_dates": [
+            "2026/02/17 (Mon) 21:49"
+        ],
+        "haystack_session_ids": [
+            "main_session_20260217"
+        ],
+        "haystack_sessions": [
+            [
+                {
+                    "role": "assistant",
+                    "content": "Slack Integration Setup completed:\n\n- Added Slack channel to config with Socket Mode\n- Tokens: appToken (xapp-...) and botToken (xoxb-...)\n- Config location: channels.slack in config.json\n\n**Note:** Slack uses different schema than WhatsApp/Telegram — dmPolicy is NOT a valid top-level key. Use dm.policy nested structure or omit (defaults to pairing).\n\n**DM Fix:** DMs weren't working initially — needed Slack app event subscriptions:\n- Must add `message.im` to \"Subscribe to bot events\" in Event Subscriptions\n- Required Bot Token Scopes: `im:history`, `im:read`, `im:write`, `chat:write`\n- Reinstall app after adding scopes",
+                    "has_answer": true
+                }
+            ]
+        ],
+        "answer_session_ids": [
+            "main_session_20260217"
+        ],
+        "metadata": {
+            "agents_involved": ["main"],
+            "memory_type": "integration_config",
+            "difficulty": "hard"
+        }
+    }
+]
