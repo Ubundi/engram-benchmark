@@ -1,0 +1,2 @@
+{"id":"dev-001","input":"What is 2 + 2?","reference_answer":"4","metadata":{"source":"synthetic","difficulty":"easy"}}
+{"id":"dev-002","input":"Name the capital of France.","reference_answer":"Paris","metadata":{"source":"synthetic","difficulty":"easy"}}
