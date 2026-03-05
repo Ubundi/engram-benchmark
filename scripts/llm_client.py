@@ -8,6 +8,7 @@ instead of the Anthropic API directly.
 import logging
 import subprocess
 import time
+from typing import List, Optional
 
 from scripts.config import (
     API_REQUESTS_PER_MINUTE,
@@ -21,7 +22,7 @@ from scripts.config import (
 logger = logging.getLogger(__name__)
 
 # Module-level rate limiter state
-_request_times: list[float] = []
+_request_times: List[float] = []
 
 
 def _rate_limit() -> None:
@@ -37,7 +38,7 @@ def _rate_limit() -> None:
     _request_times.append(time.time())
 
 
-def call(system_prompt: str, user_prompt: str, model: str | None = None, timeout: int | None = None) -> str:
+def call(system_prompt: str, user_prompt: str, model: Optional[str] = None, timeout: Optional[int] = None) -> str:
     """
     Call Claude via the CLI and return the response text.
 
