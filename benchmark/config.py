@@ -16,6 +16,14 @@ class RunConfig:
     output_dir: str = "outputs"
     config_path: str | None = None
     max_tasks: int | None = None
+    skip_seed: bool = False
+    settle_seconds: int = 120
+    dry_run: bool = False
+    judge_model: str = "gpt-4.1-mini"
+    judge_base_url: str = "https://api.openai.com/v1"
+    judge_api_key: str = ""
+    judge_passes: int = 3
+    judge_temperature: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

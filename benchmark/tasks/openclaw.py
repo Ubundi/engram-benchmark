@@ -53,6 +53,7 @@ def normalize_openclaw_task(task: dict[str, Any]) -> dict[str, Any]:
             "haystack_dates": task.get("haystack_dates", []),
             "haystack_session_ids": task.get("haystack_session_ids", []),
             "answer_session_ids": task.get("answer_session_ids", []),
+            "haystack_sessions": task.get("haystack_sessions", []),
             "source_metadata": metadata,
             "context_snippets": context_snippets,
         },

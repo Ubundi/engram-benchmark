@@ -30,5 +30,8 @@ data/raw/engram-v3.json
 data/raw/engram-v3-test.json
 data/splits/v3.jsonl
 
+# Logs
+*.log
+
 # OS
 .DS_Store

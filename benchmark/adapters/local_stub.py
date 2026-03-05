@@ -13,6 +13,10 @@ class LocalStubAdapter(BaseAdapter):
     def name(self) -> str:
         return "local_stub"
 
+    def seed(self, task: dict[str, Any]) -> dict[str, Any]:
+        sessions = task.get("metadata", {}).get("haystack_sessions", [])
+        return {"seeded": True, "session_count": len(sessions)}
+
     def predict(self, task: dict[str, Any]) -> dict[str, Any]:
         task_id = str(task.get("id", "unknown"))
         prompt_text = str(task.get("input", ""))

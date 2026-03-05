@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,7 @@ from benchmark.config import RunConfig, load_config
 from benchmark.evaluators.abstain import evaluate_abstain
 from benchmark.evaluators.qa import evaluate_qa
 from benchmark.evaluators.retrieval import evaluate_retrieval
+from benchmark.judge import judge_all
 from benchmark.reports.writer import write_run_artifacts
 from benchmark.tasks.loader import load_tasks
 from benchmark.utils.logging import configure_logging
@@ -27,7 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--agent",
         required=True,
-        help="Agent adapter name (local_stub) or OpenClaw agent ID for live runs.",
+        help="Agent adapter name (local_stub) or HTTP base URL for live runs.",
     )
     parser.add_argument(
         "--split",
@@ -50,7 +52,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Simulate inference without external agent calls.",
+        help="Simulate inference without external agent calls (skips settle + judge).",
     )
     parser.add_argument(
         "--skip-seed",
@@ -108,6 +110,14 @@ def _build_run_config(args: argparse.Namespace) -> RunConfig:
         "output_dir": args.output_dir,
         "config_path": args.config,
         "max_tasks": args.max_tasks,
+        "skip_seed": args.skip_seed,
+        "settle_seconds": args.settle_seconds,
+        "dry_run": args.dry_run,
+        "judge_model": args.judge_model,
+        "judge_base_url": args.judge_base_url,
+        "judge_api_key": args.judge_api_key,
+        "judge_passes": args.judge_passes,
+        "judge_temperature": args.judge_temperature,
     }
     for key, value in file_config.items():
         if key in merged and merged[key] is None:
@@ -123,22 +133,58 @@ def run_benchmark(config: RunConfig) -> dict[str, Any]:
     logger.info("initializing adapter: %s", config.agent)
     adapter = get_adapter(config.agent)
 
+    # Phase 1: Seed
+    seed_turns: list[dict[str, Any]] = []
+    if not config.skip_seed:
+        logger.info("phase 1: seeding %d tasks", len(tasks))
+        for task in tasks:
+            result = adapter.seed(task)
+            seed_turns.append({"task_id": task["id"], **result})
+    else:
+        logger.info("phase 1: skipped (--skip-seed)")
+
+    # Phase 2: Settle
+    if not config.skip_seed and config.settle_seconds > 0 and not config.dry_run:
+        logger.info("phase 2: settling for %ds...", config.settle_seconds)
+        time.sleep(config.settle_seconds)
+    else:
+        logger.info("phase 2: skipped")
+
+    # Phase 3: Probe
+    logger.info("phase 3: probing %d tasks", len(tasks))
     predictions: list[dict[str, Any]] = []
+    probes: list[dict[str, Any]] = []
     for task in tasks:
         result = adapter.predict(task)
+        output = result.get("output", "")
         prediction = {
             "id": f"pred-{task['id']}",
             "task_id": task["id"],
             "agent": adapter.name,
-            "output": result.get("output", ""),
+            "output": output,
             "metadata": result.get("metadata", {}),
         }
         predictions.append(prediction)
+        probes.append({"task_id": task["id"], "question": task["input"], "output": output})
+
+    # Phase 4: Judge
+    judgments: list[dict[str, Any]] = []
+    if not config.dry_run and config.judge_api_key:
+        logger.info(
+            "phase 4: judging %d predictions (model=%s, passes=%d)",
+            len(predictions),
+            config.judge_model,
+            config.judge_passes,
+        )
+        judgments = judge_all(tasks, predictions, config)
+    else:
+        reason = "dry_run" if config.dry_run else "no judge_api_key"
+        logger.info("phase 4: skipped (%s)", reason)
 
     metrics: dict[str, Any] = {}
-    metrics.update(evaluate_qa(tasks, predictions))
-    metrics.update(evaluate_retrieval(tasks, predictions))
-    metrics.update(evaluate_abstain(tasks, predictions))
+    metrics.update(evaluate_qa(tasks, predictions, judgments or None))
+    metrics.update(evaluate_retrieval(tasks, predictions, judgments or None))
+    metrics.update(evaluate_abstain(tasks, predictions, judgments or None))
 
     run_id = datetime.now(tz=timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     run_metadata = {
@@ -147,6 +193,8 @@ def run_benchmark(config: RunConfig) -> dict[str, Any]:
         "config": config.to_dict(),
         "task_count": len(tasks),
         "prediction_count": len(predictions),
+        "seed_count": len(seed_turns),
+        "judgment_count": len(judgments),
     }
 
     run_dir = write_run_artifacts(
@@ -155,6 +203,9 @@ def run_benchmark(config: RunConfig) -> dict[str, Any]:
         predictions=predictions,
         metrics=metrics,
         run_metadata=run_metadata,
+        seed_turns=seed_turns if not config.skip_seed else None,
+        probes=probes,
+        judgments=judgments if judgments else None,
     )
 
     logger.info("run complete: %s", run_dir)
