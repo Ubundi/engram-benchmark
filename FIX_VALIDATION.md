@@ -1,6 +1,6 @@
 # Fix Validation Failures in v3 Benchmark
 
-The generated `openclaw-memory-benchmark-v3.json` (518 questions) has **3 failing validation checks** out of 10. This document describes each failure and how to fix it.
+The generated `openclaw-memory-benchmark-v3.json` (517 questions after anonymization) has **3 failing validation checks** out of 10. This document describes each failure and how to fix it.
 
 **Target file:** `openclaw-memory-benchmark-v3.json`
 **Validation command:** `python3 -m scripts.generate_v3 --validate-only`
