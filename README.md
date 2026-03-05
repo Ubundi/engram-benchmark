@@ -6,13 +6,9 @@ This project is designed to run directly inside an agent runtime workspace. It i
 library-first. You clone or copy the repo, run benchmark commands, and collect artifacts
 from `outputs/`.
 
-## What this repository supports today
+## Dataset
 
-- `standard` protocol: generic benchmark scaffold with local/offline stub adapter support.
-- `v2` protocol: legacy OpenClaw V2 benchmark execution pipeline with explicit
-  `baseline` and `cortex` conditions.
-- `v3` dataset: 518-task OpenClaw Memory Benchmark v3 — fully integrated at `data/splits/v3.jsonl`.
-- Legacy V2 source dataset: `openclaw-memory-benchmark-v2.json`.
+504-task OpenClaw Memory Benchmark v3 at `data/splits/v3.jsonl`. Tests agent memory across 8 question types: temporal reasoning, multi-session, knowledge updates, cross-agent memory, multi-hop reasoning, recurring patterns, and single-session recall.
 
 ## Quickstart
 
@@ -22,81 +18,40 @@ from `outputs/`.
 python3 -m pip install -e ".[dev]"
 ```
 
-### 2) Inspect CLI
+### 2) Run against the v3 dataset
 
 ```bash
-python3 -m benchmark.run --help
+python3 -m benchmark.run --agent local_stub
 ```
 
-### 3) Standard scaffold smoke test
+### 3) Run on a live agent
 
 ```bash
-python3 -m benchmark.run --agent local_stub --split dev
+JUDGE_API_KEY="<key>" python3 -m benchmark.run --agent <openclaw-agent-id>
 ```
 
-### 4) Run the v3 dataset
-
-```bash
-python3 -m benchmark.run --agent local_stub --split v3
-```
-
-### 5) V2 protocol dry-run smoke test
-
-```bash
-python3 -m benchmark.run \
-  --protocol v2 \
-  --condition baseline \
-  --agent bench-baseline \
-  --data-path openclaw-memory-benchmark-v2.json \
-  --max-tasks 5 \
-  --dry-run
-```
-
-## Run the V2 benchmark on live agents
-
-The V2 protocol is a real runtime flow: seed conversations, settle, probe recall,
-then judge answers. Point it at any agent — whatever memory setup it has is what gets measured.
-
-```bash
-JUDGE_API_KEY="<key>" python3 -m benchmark.run \
-  --protocol v2 \
-  --agent <openclaw-agent-id> \
-  --data-path openclaw-memory-benchmark-v2.json
-```
+The benchmark seeds memory sessions into the agent, waits for settle, probes recall, then judges answers with an LLM. Whatever memory setup the agent has is what gets measured.
 
 Notes:
-- Use `--skip-seed` if you only want probe + judge on a pre-seeded agent.
+- Use `--skip-seed` to skip seeding and only probe + judge a pre-seeded agent.
 - Use `--settle-seconds` to control the wait between seed and probe phases.
+- Use `--max-tasks N` to run a subset.
 
 ## Outputs
 
-Each run creates `outputs/<run_id>/`.
-
-Core artifacts:
+Each run creates `outputs/<run_id>/` containing:
 - `predictions.jsonl`
 - `metrics.json`
 - `run_metadata.json`
 
-Additional V2 artifacts:
-- `seed_turns.jsonl`
-- `probes.jsonl`
-- `judgments.jsonl`
-- `v2_report.json`
-
 ## Repository map
 
-- `benchmark/`: CLI, protocols, adapters, task loaders, evaluators, report writers.
-- `data/`: schemas, sample splits, and raw staging notes.
-- `docs/`: benchmark specification, evaluation protocol, reproducibility, and V2 run docs.
-- `leaderboard/`: submission format and leaderboard policy docs.
+- `benchmark/`: CLI, adapters, task loader, evaluators, report writers.
+- `data/`: v3 dataset (`splits/v3.jsonl`), schemas, and raw source JSON.
+- `docs/`: benchmark specification and evaluation protocol.
+- `leaderboard/`: submission format and leaderboard policy.
 - `outputs/`: run artifacts.
-- `tests/`: import, CLI, schema, and V2 protocol dry-run tests.
-
-## Current scope and limitations
-
-- V2 runtime flow and judge scoring are implemented.
-- Baseline/cortex comparison report generation is still manual.
-- `codex` and `openai` adapters remain stubs in standard mode.
+- `tests/`: import, CLI, and schema tests.
 
 ## Versioning policy
 
