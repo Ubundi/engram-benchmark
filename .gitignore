@@ -27,6 +27,7 @@ outputs/*
 
 # Dataset — fetched from HuggingFace at runtime, not stored in repo
 data/raw/engram-v3.json
+data/raw/engram-v3-test.json
 data/splits/v3.jsonl
 
 # OS

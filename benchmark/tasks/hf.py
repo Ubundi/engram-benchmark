@@ -6,14 +6,10 @@ from pathlib import Path
 
 HF_REPO_ID = "matthewschramm/engram-v3"
 HF_FILENAME = "engram-v3.json"
+HF_TEST_FILENAME = "engram-v3-test.json"
 
 
-def fetch_engram_dataset() -> Path:
-    """Download engram-v3.json from HuggingFace and return the local cache path.
-
-    Requires HF authentication for the private repo — either run `hf auth login`
-    or set the HF_TOKEN environment variable.
-    """
+def _hf_download(filename: str) -> Path:
     try:
         from huggingface_hub import hf_hub_download
     except ImportError as e:
@@ -23,7 +19,25 @@ def fetch_engram_dataset() -> Path:
 
     local_path = hf_hub_download(
         repo_id=HF_REPO_ID,
-        filename=HF_FILENAME,
+        filename=filename,
         repo_type="dataset",
     )
     return Path(local_path)
+
+
+def fetch_engram_dataset() -> Path:
+    """Download the full engram-v3.json dataset from HuggingFace.
+
+    Requires HF authentication for the private repo — either run `hf auth login`
+    or set the HF_TOKEN environment variable.
+    """
+    return _hf_download(HF_FILENAME)
+
+
+def fetch_engram_test_dataset() -> Path:
+    """Download the 50-question test split from HuggingFace.
+
+    Requires HF authentication for the private repo — either run `hf auth login`
+    or set the HF_TOKEN environment variable.
+    """
+    return _hf_download(HF_TEST_FILENAME)

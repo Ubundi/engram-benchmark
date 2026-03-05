@@ -10,10 +10,10 @@ from benchmark.tasks.schemas import validate_task_dict
 from benchmark.utils.io import read_jsonl
 
 
-def _fetch_from_hf() -> Path:
-    from benchmark.tasks.hf import fetch_engram_dataset
+def _fetch_from_hf(test: bool = False) -> Path:
+    from benchmark.tasks.hf import fetch_engram_dataset, fetch_engram_test_dataset
 
-    return fetch_engram_dataset()
+    return fetch_engram_test_dataset() if test else fetch_engram_dataset()
 
 
 def _read_tasks(path: Path) -> list[dict[str, Any]]:
@@ -44,7 +44,7 @@ def load_tasks(
             path = local_sample
         else:
             # Fall back to HuggingFace
-            path = _fetch_from_hf()
+            path = _fetch_from_hf(test=(split == "test"))
 
     tasks = _read_tasks(path)
     validated: list[dict[str, Any]] = []
