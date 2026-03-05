@@ -1,4 +1,4 @@
-"""Task loader for the OpenClaw v3 benchmark dataset."""
+"""Task loader for the Engram benchmark dataset."""
 
 from __future__ import annotations
 
@@ -10,22 +10,9 @@ from benchmark.tasks.schemas import validate_task_dict
 from benchmark.utils.io import read_jsonl
 
 
-def _default_data_path() -> Path:
-    root = Path(__file__).resolve().parents[2]
-    return root / "data" / "splits" / "v3.jsonl"
-
-
-def _default_split_path(split: str) -> Path:
-    root = Path(__file__).resolve().parents[2]
-    # Canonical JSONL splits live in data/splits/
-    canonical = root / "data" / "splits" / f"{split}.jsonl"
-    if canonical.exists():
-        return canonical
-    # Small sample splits for CI (e.g. dev.sample.jsonl)
-    sample = root / "data" / "splits" / f"{split}.sample.jsonl"
-    if sample.exists():
-        return sample
-    return canonical
+def _fetch_from_hf() -> Path:
+    from benchmark.tasks.hf import fetch_engram_dataset
+    return fetch_engram_dataset()
 
 
 def _read_tasks(path: Path) -> list[dict[str, Any]]:
@@ -41,9 +28,22 @@ def load_tasks(
     data_path: str | None = None,
     max_tasks: int | None = None,
 ) -> list[dict[str, Any]]:
-    path = Path(data_path) if data_path else _default_split_path(split)
-    if not path.exists():
-        raise FileNotFoundError(f"Task file not found: {path}")
+    if data_path:
+        path = Path(data_path)
+        if not path.exists():
+            raise FileNotFoundError(f"Task file not found: {path}")
+    else:
+        # Check for a local JSONL override (useful for CI sample splits)
+        root = Path(__file__).resolve().parents[2]
+        local_jsonl = root / "data" / "splits" / f"{split}.jsonl"
+        local_sample = root / "data" / "splits" / f"{split}.sample.jsonl"
+        if local_jsonl.exists():
+            path = local_jsonl
+        elif local_sample.exists():
+            path = local_sample
+        else:
+            # Fall back to HuggingFace
+            path = _fetch_from_hf()
 
     tasks = _read_tasks(path)
     validated: list[dict[str, Any]] = []

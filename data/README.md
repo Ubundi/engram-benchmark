@@ -5,10 +5,10 @@ This directory holds benchmark datasets, schemas, and staging notes.
 ## Layout
 
 - `splits/`: canonical JSONL task splits.
-  - `v3.jsonl` — 504-task OpenClaw Memory Benchmark v3 (generated from `raw/v3/`)
+  - `v3.jsonl` — 504-task Engram v3 dataset (generated from `raw/v3/`)
   - `*.sample.jsonl` — small CI-safe sample splits
 - `schemas/`: JSON schemas for tasks and predictions.
-- `raw/v3/`: source JSON (`openclaw-memory-benchmark-v3.json`). Regenerate the split with `make ingest-v3`.
+- `raw/v3/`: source JSON (`engram-v3.json`). Regenerate the split with `make ingest-v3`.
 
 ## Canonical task fields
 

@@ -1,6 +1,6 @@
-# Cortex Benchmark
+# Engram
 
-Runtime-first benchmark repository for evaluating agent memory behavior.
+Runtime-first benchmark for evaluating agent memory behavior.
 
 This project is designed to run directly inside an agent runtime workspace. It is not
 library-first. You clone or copy the repo, run benchmark commands, and collect artifacts
@@ -8,7 +8,13 @@ from `outputs/`.
 
 ## Dataset
 
-504-task OpenClaw Memory Benchmark v3 at `data/splits/v3.jsonl`. Tests agent memory across 8 question types: temporal reasoning, multi-session, knowledge updates, cross-agent memory, multi-hop reasoning, recurring patterns, and single-session recall.
+504-task [Engram v3](https://huggingface.co/datasets/matthewschramm/engram-v3) dataset. Tests agent memory across 8 question types: temporal reasoning, multi-session, knowledge updates, cross-agent memory, multi-hop reasoning, recurring patterns, and single-session recall.
+
+The dataset is fetched automatically from HuggingFace on first run and cached locally. Authentication is required:
+
+```bash
+hf auth login   # or set HF_TOKEN env var
+```
 
 ## Quickstart
 

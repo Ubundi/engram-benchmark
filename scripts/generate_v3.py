@@ -1,12 +1,12 @@
 """
-OpenClaw Memory Benchmark v3 — Main Pipeline Orchestrator
+Engram v3 — Main Pipeline Orchestrator
 
 Runs the full generation pipeline (uses Claude Code CLI, no API key needed):
   Phase 1: Load entity seed → initialize registry
   Phase 2: Generate session corpus (300 sessions via Claude Code CLI)
   Phase 3: Generate questions (500 questions against corpus)
   Phase 4: Run validation
-  Phase 5: Export to openclaw-memory-benchmark-v3.json
+  Phase 5: Export to engram-v3.json
   Phase 6: Generate statistics report
 
 Usage:
