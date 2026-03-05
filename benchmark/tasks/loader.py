@@ -34,13 +34,14 @@ def load_tasks(
         if not path.exists():
             raise FileNotFoundError(f"Task file not found: {path}")
     else:
-        # Check for a local JSONL override (useful for CI sample splits)
+        # "test" is a named HF split — always fetch from HuggingFace.
+        # For other splits, check for a local JSONL override first (useful for CI).
         root = Path(__file__).resolve().parents[2]
         local_jsonl = root / "data" / "splits" / f"{split}.jsonl"
         local_sample = root / "data" / "splits" / f"{split}.sample.jsonl"
-        if local_jsonl.exists():
+        if split != "test" and local_jsonl.exists():
             path = local_jsonl
-        elif local_sample.exists():
+        elif split != "test" and local_sample.exists():
             path = local_sample
         else:
             # Fall back to HuggingFace
