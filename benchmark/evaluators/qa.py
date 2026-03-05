@@ -11,7 +11,12 @@ def evaluate_qa(
     judgments: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     if not tasks:
-        return {"qa.exact_match": 0.0, "qa.mean_score": None, "qa.judged_count": 0, "qa.error_count": 0}
+        return {
+            "qa.exact_match": 0.0,
+            "qa.mean_score": None,
+            "qa.judged_count": 0,
+            "qa.error_count": 0,
+        }
 
     pred_by_task: dict[str, str] = {p["task_id"]: p.get("output", "") for p in predictions}
     judgment_by_task: dict[str, dict[str, Any]] = {}

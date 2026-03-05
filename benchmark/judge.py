@@ -36,9 +36,7 @@ def _call_judge(
         {
             "role": "user",
             "content": (
-                f"Question: {question}\n"
-                f"Reference answer: {reference}\n"
-                f"Agent response: {response}"
+                f"Question: {question}\nReference answer: {reference}\nAgent response: {response}"
             ),
         },
     ]
@@ -89,7 +87,13 @@ def judge_response(
                 raise ValueError(f"score out of range: {score}")
             scores.append(score)
             rationales.append(result.get("rationale", ""))
-        except (urllib.error.URLError, urllib.error.HTTPError, KeyError, ValueError, json.JSONDecodeError) as exc:
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            KeyError,
+            ValueError,
+            json.JSONDecodeError,
+        ) as exc:
             errors.append(str(exc))
             logger.warning("judge pass failed: %s", exc)
 

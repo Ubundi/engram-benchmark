@@ -20,4 +20,7 @@ def get_adapter(name: str) -> BaseAdapter:
         return CodexAdapter()
     if normalized == "openai":
         return OpenAIAdapter()
-    raise ValueError(f"Unknown adapter '{name}'. Expected one of: local_stub, codex, openai, or an http(s):// URL")
+    raise ValueError(
+        f"Unknown adapter '{name}'. "
+        "Expected one of: local_stub, codex, openai, or an http(s):// URL"
+    )
