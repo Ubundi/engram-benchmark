@@ -2,7 +2,7 @@
 
 > **Finding:** Without memory augmentation, agents abstain on 64% of long-term recall probes and answer correctly on only 4%. With memory augmentation, correct recall reaches 48% and abstention drops to 12%.
 
-🤗 [Dataset](https://huggingface.co/datasets/matthewschramm/engram-v3) &nbsp;·&nbsp; 📊 [Results](docs/FINDINGS.md) &nbsp;·&nbsp; 📋 [Benchmark Spec](docs/benchmark_spec.md) &nbsp;·&nbsp; 📄 [Evaluation Protocol](docs/evaluation_protocol.md)
+🤗 [Dataset](https://huggingface.co/datasets/matthewschramm/engram-v3) &nbsp;·&nbsp; 📊 [Results](docs/FINDINGS.md) &nbsp;·&nbsp; 📋 [Benchmark Spec](docs/benchmark_spec.md) &nbsp;·&nbsp; 📄 [Evaluation Protocol](docs/evaluation_protocol.md) &nbsp;·&nbsp; 🔌 [Integration Guide](docs/integration_guide.md)
 
 ---
 
@@ -78,11 +78,15 @@ python3 -m benchmark.run --agent local_stub
 
 ### 4. Run against a live agent
 
+Start your agent server, then point the benchmark at it:
+
 ```bash
-JUDGE_API_KEY="<key>" python3 -m benchmark.run --agent <openclaw-agent-id>
+JUDGE_API_KEY="<key>" python3 -m benchmark.run --agent http://localhost:8080
 ```
 
 Engram seeds memory sessions into the agent, waits for memory processing to settle, probes recall in a fresh session, and judges responses with an LLM.
+
+See [docs/integration_guide.md](docs/integration_guide.md) for the HTTP server contract, a minimal Python example, and a custom Python adapter option.
 
 **Useful flags:**
 
@@ -164,11 +168,12 @@ Each run produces `outputs/<run_id>/` containing:
 engram/
 ├── benchmark/           CLI, adapters, task loader, evaluators, writers
 │   ├── tasks/           Task loading, HuggingFace fetch, schema validation
-│   ├── adapters/        Agent adapter interface
-│   └── evaluators/      QA, retrieval, and abstention evaluators
+│   ├── adapters/        Agent adapters: local_stub, http, openai, codex
+│   ├── evaluators/      QA, retrieval, and abstention evaluators
+│   └── judge.py         Multi-pass LLM judge (0–3 scoring)
 ├── data/
 │   └── splits/          CI sample splits (*.sample.jsonl)
-├── docs/                Benchmark spec, evaluation protocol, findings, reproducibility
+├── docs/                Benchmark spec, evaluation protocol, findings, integration guide
 ├── leaderboard/         Submission format and leaderboard policy
 ├── outputs/             Run artifacts (gitignored)
 ├── scripts/             Dataset generation pipeline
