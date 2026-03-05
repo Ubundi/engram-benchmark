@@ -95,6 +95,42 @@ Seed  →  Settle  →  Probe  →  Judge
 | 1 | Abstained | "I don't have that context" |
 | 0 | Hallucinated | Wrong specific stated with confidence |
 
+## Dataset Files
+
+| File | Split | Tasks | Purpose |
+|------|-------|------:|---------|
+| `engram-v3.json` | `v3` (default) | 504 | Full benchmark — use for final evaluation |
+| `engram-v3-test.json` | `test` | 50 | Lightweight test split — use for development and quick runs |
+
+Both files are hosted on HuggingFace at [matthewschramm/engram-v3](https://huggingface.co/datasets/matthewschramm/engram-v3) and fetched automatically at runtime. They are not committed to the repository.
+
+## Fetching the Dataset
+
+Requires HF authentication — either run `huggingface-cli login` or set the `HF_TOKEN` environment variable.
+
+**Via Makefile:**
+```bash
+make fetch        # full dataset (engram-v3.json)
+make fetch-test   # test split  (engram-v3-test.json)
+```
+
+**Via Python:**
+```python
+from benchmark.tasks.hf import fetch_engram_dataset, fetch_engram_test_dataset
+
+path = fetch_engram_dataset()       # → ~/.cache/huggingface/...
+path = fetch_engram_test_dataset()  # → ~/.cache/huggingface/...
+```
+
+**Via benchmark runner:**
+```bash
+# Full dataset (default)
+python3 -m benchmark.run --agent <id>
+
+# Test split
+python3 -m benchmark.run --agent <id> --split test
+```
+
 ## Benchmark Harness
 
 The full evaluation harness — including HuggingFace fetching, OpenClaw adapter, LLM judge, and artifact writers — is available at [Ubundi/cortex-benchmark](https://github.com/Ubundi/cortex-benchmark).

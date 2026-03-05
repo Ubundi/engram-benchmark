@@ -1,4 +1,4 @@
-.PHONY: setup lint format test check run fetch
+.PHONY: setup lint format test check run fetch fetch-test
 
 setup:
 	python3 -m pip install -e ".[dev]"
@@ -21,3 +21,6 @@ run:
 
 fetch:
 	python3 -c "from benchmark.tasks.hf import fetch_engram_dataset; p = fetch_engram_dataset(); print(f'Dataset cached at: {p}')"
+
+fetch-test:
+	python3 -c "from benchmark.tasks.hf import fetch_engram_test_dataset; p = fetch_engram_test_dataset(); print(f'Test dataset cached at: {p}')"
