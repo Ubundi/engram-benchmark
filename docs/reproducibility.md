@@ -1,64 +1,57 @@
 # Reproducibility
 
-## Environment baseline
+## Environment
 
-Recommended:
 - Python 3.10+
-- Stable OpenClaw CLI version for V2 live runs
-- Fixed judge model and endpoint settings
-
-Install:
+- Stable OpenClaw CLI version for live agent runs
+- Fixed judge model and endpoint settings across compared conditions
 
 ```bash
-python3 -m pip install -e ".[dev]"
+pip install -e ".[dev]"
 ```
 
 ## Determinism controls
 
-- Use fixed `--max-tasks` and fixed dataset path for comparisons.
-- Keep `--judge-model`, `--judge-passes`, and `--judge-temperature` unchanged across
-  baseline and cortex runs.
+- Use a fixed `--max-tasks` cap and the same dataset version for all compared runs.
+- Keep `--judge-model`, `--judge-passes`, and `--judge-temperature` unchanged across conditions.
 - Keep `--settle-seconds` and `--openclaw-timeout` consistent across conditions.
-- Use separate agent IDs for baseline and cortex.
+- Use separate agent IDs for each condition.
 
-## Reproducible V2 run procedure
+## Reproducible run procedure
 
-1. Run baseline:
+### Baseline condition
 
 ```bash
 JUDGE_API_KEY="<key>" python3 -m benchmark.run \
-  --protocol v2 \
-  --condition baseline \
   --agent <baseline-agent-id> \
-  --data-path openclaw-memory-benchmark-v2.json
+  --settle-seconds 120
 ```
 
-2. Run cortex with the same non-condition settings:
+### Memory-augmented condition
 
 ```bash
 JUDGE_API_KEY="<key>" python3 -m benchmark.run \
-  --protocol v2 \
-  --condition cortex \
-  --agent <cortex-agent-id> \
-  --data-path openclaw-memory-benchmark-v2.json
+  --agent <augmented-agent-id> \
+  --settle-seconds 120
 ```
 
-3. Archive both output directories unchanged.
+Archive both output directories unchanged before comparison.
 
 ## Verification checklist
 
-- `run_metadata.json` exists and includes protocol, condition, and config.
-- `metrics.json` exists and includes V2 score fields.
+- `run_metadata.json` exists and includes agent ID and full config.
+- `metrics.json` exists and includes `mean_score` and per-category fields.
 - `seed_turns.jsonl`, `probes.jsonl`, and `judgments.jsonl` exist for each run.
 - No probe or judge errors beyond tolerated thresholds for your org.
 
 ## Reporting checklist
 
 When sharing results, include:
-- run IDs
-- commit SHA
-- protocol and condition
-- model/judge settings
-- dataset path
-- mean and per-category metrics
-- known errors/failures observed in run artifacts
+
+- Run IDs and commit SHA
+- Agent version and configuration
+- Judge model and number of passes
+- Dataset version (Engram v3)
+- Settle seconds used
+- Mean score and per-category scores
+- Error count and any known failures observed in run artifacts

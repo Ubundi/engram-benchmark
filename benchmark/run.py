@@ -60,8 +60,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--settle-seconds",
         type=int,
-        default=10,
-        help="Wait time between seed and probe phases (default: 10).",
+        default=120,
+        help="Wait time between seed and probe phases (default: 120).",
     )
     parser.add_argument(
         "--openclaw-timeout",
