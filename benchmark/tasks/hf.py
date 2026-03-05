@@ -18,8 +18,7 @@ def fetch_engram_dataset() -> Path:
         from huggingface_hub import hf_hub_download
     except ImportError as e:
         raise ImportError(
-            "huggingface_hub is required to fetch the dataset. "
-            "Run: pip install huggingface_hub"
+            "huggingface_hub is required to fetch the dataset. Run: pip install huggingface_hub"
         ) from e
 
     local_path = hf_hub_download(

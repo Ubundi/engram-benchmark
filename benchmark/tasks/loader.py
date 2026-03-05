@@ -12,6 +12,7 @@ from benchmark.utils.io import read_jsonl
 
 def _fetch_from_hf() -> Path:
     from benchmark.tasks.hf import fetch_engram_dataset
+
     return fetch_engram_dataset()
 
 

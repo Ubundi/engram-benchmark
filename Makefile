@@ -4,15 +4,15 @@ setup:
 	python3 -m pip install -e ".[dev]"
 
 lint:
-	ruff check benchmark tests
-	ruff format --check benchmark tests
+	uv run ruff check benchmark tests
+	uv run ruff format --check benchmark tests
 
 format:
-	ruff check --fix benchmark tests
-	ruff format benchmark tests
+	uv run ruff check --fix benchmark tests
+	uv run ruff format benchmark tests
 
 test:
-	pytest
+	uv run pytest
 
 check: lint test
 
