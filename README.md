@@ -14,6 +14,10 @@ Unlike static QA benchmarks, Engram operates inside the agent runtime: it seeds 
 
 ## Task Categories
 
+<p align="center">
+  <img src="docs/assets/task-categories.png" alt="Engram task category examples" width="100%">
+</p>
+
 Engram v3 contains **504 tasks** spanning 9 question types, targeting the specific failure modes where compaction-based memory systems break down:
 
 | Category | Count | What it tests |
@@ -189,3 +193,17 @@ engram/
 ## License
 
 MIT
+
+---
+
+## Built by Ubundi
+
+<a href="https://ubundi.com">
+  <img src="docs/assets/ubundi_logo.jpeg" alt="Ubundi" height="36">
+</a>
+
+Engram is an open-source project by [Ubundi](https://ubundi.com) — a South African venture studio shaping human-centred AI. Based in Cape Town, Ubundi builds at the intersection of AI capability and African context, developing tools that ensure the benefits of AI reach their continent first.
+
+Engram was built as part of the infrastructure behind [TooToo](https://ubundi.com), Ubundi's personal identity layer for language models — where robust long-term memory recall is foundational to delivering contextually relevant, grounded responses.
+
+→ [ubundi.com](https://ubundi.com)
