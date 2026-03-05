@@ -11,6 +11,7 @@ from `outputs/`.
 - `standard` protocol: generic benchmark scaffold with local/offline stub adapter support.
 - `v2` protocol: legacy OpenClaw V2 benchmark execution pipeline with explicit
   `baseline` and `cortex` conditions.
+- `v3` dataset: 518-task OpenClaw Memory Benchmark v3 — fully integrated at `data/splits/v3.jsonl`.
 - Legacy V2 source dataset: `openclaw-memory-benchmark-v2.json`.
 
 ## Quickstart
@@ -33,7 +34,13 @@ python3 -m benchmark.run --help
 python3 -m benchmark.run --agent local_stub --split dev
 ```
 
-### 4) V2 protocol dry-run smoke test
+### 4) Run the v3 dataset
+
+```bash
+python3 -m benchmark.run --agent local_stub --split v3
+```
+
+### 5) V2 protocol dry-run smoke test
 
 ```bash
 python3 -m benchmark.run \
@@ -48,32 +55,18 @@ python3 -m benchmark.run \
 ## Run the V2 benchmark on live agents
 
 The V2 protocol is a real runtime flow: seed conversations, settle, probe recall,
-then judge answers.
-
-### Baseline condition
+then judge answers. Point it at any agent — whatever memory setup it has is what gets measured.
 
 ```bash
 JUDGE_API_KEY="<key>" python3 -m benchmark.run \
   --protocol v2 \
-  --condition baseline \
-  --agent <openclaw-agent-id> \
-  --data-path openclaw-memory-benchmark-v2.json
-```
-
-### Cortex condition
-
-```bash
-JUDGE_API_KEY="<key>" python3 -m benchmark.run \
-  --protocol v2 \
-  --condition cortex \
   --agent <openclaw-agent-id> \
   --data-path openclaw-memory-benchmark-v2.json
 ```
 
 Notes:
-- `cortex` mode runs a `/memories` preflight and requires cortex tools to be present.
-- Use separate agent IDs for clean baseline vs cortex comparisons.
 - Use `--skip-seed` if you only want probe + judge on a pre-seeded agent.
+- Use `--settle-seconds` to control the wait between seed and probe phases.
 
 ## Outputs
 
@@ -104,7 +97,6 @@ Additional V2 artifacts:
 - V2 runtime flow and judge scoring are implemented.
 - Baseline/cortex comparison report generation is still manual.
 - `codex` and `openai` adapters remain stubs in standard mode.
-- Final production dataset package is not yet integrated.
 
 ## Versioning policy
 

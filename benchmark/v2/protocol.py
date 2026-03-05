@@ -21,7 +21,6 @@ from benchmark.utils.logging import configure_logging
 
 @dataclass
 class V2RunConfig:
-    condition: str
     agent_id: str | None
     data_path: str | None
     output_dir: str
@@ -53,8 +52,6 @@ def run_v2_benchmark(config: V2RunConfig) -> dict[str, Any]:
     if not config.dry_run and not config.judge_api_key:
         raise ValueError("JUDGE_API_KEY is required for V2 protocol unless --dry-run is set")
 
-    _run_cortex_preflight(config, logger)
-
     seed_sessions = _extract_seed_sessions(records)
     seed_turns = _run_seed_phase(config, seed_sessions, logger)
     _run_settle_phase(config, logger)
@@ -62,14 +59,14 @@ def run_v2_benchmark(config: V2RunConfig) -> dict[str, Any]:
     judgments = _run_judge_phase(config, probes, logger)
 
     metrics = _compute_metrics(probes, judgments)
-    predictions = _build_predictions(config.condition, probes, judgments)
+    predictions = _build_predictions(config.agent_id, probes, judgments)
 
-    run_id = f"v2-{config.condition}-{datetime.now(tz=timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+    run_id = f"v2-{datetime.now(tz=timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
     run_metadata = {
         "run_id": run_id,
         "timestamp_utc": datetime.now(tz=timezone.utc).isoformat(),
         "protocol": "v2",
-        "condition": config.condition,
+        "agent_id": config.agent_id,
         "config": config.to_metadata_dict(),
         "data_path": str(data_path),
         "seed_session_count": len(seed_sessions),
@@ -92,7 +89,7 @@ def run_v2_benchmark(config: V2RunConfig) -> dict[str, Any]:
         run_dir / "v2_report.json",
         {
             "run_id": run_id,
-            "condition": config.condition,
+            "agent_id": config.agent_id,
             "seed_sessions": len(seed_sessions),
             "seed_turns": seed_turns,
             "probes": probes,
@@ -105,7 +102,7 @@ def run_v2_benchmark(config: V2RunConfig) -> dict[str, Any]:
     return {
         "run_dir": str(run_dir),
         "protocol": "v2",
-        "condition": config.condition,
+        "agent_id": config.agent_id,
         "task_count": len(records),
         "mean_score": metrics.get("v2.mean_score", 0.0),
     }
@@ -228,7 +225,7 @@ def _run_probe_phase(
     logger: Any,
 ) -> list[dict[str, Any]]:
     logger.info("v2 probe phase: %d prompts", len(records))
-    probe_session_id = f"benchmark-probe-{config.condition}-{int(time.time())}"
+    probe_session_id = f"benchmark-probe-{int(time.time())}"
     probes: list[dict[str, Any]] = []
 
     for idx, record in enumerate(records, start=1):
@@ -442,7 +439,7 @@ def _parse_judge_output(output: str) -> tuple[float, str]:
 
 
 def _build_predictions(
-    condition: str,
+    agent_id: str | None,
     probes: list[dict[str, Any]],
     judgments: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
@@ -456,7 +453,7 @@ def _build_predictions(
             {
                 "id": f"pred-{prompt_id}",
                 "task_id": prompt_id,
-                "agent": condition,
+                "agent": agent_id or "unknown",
                 "output": str(probe.get("response") or ""),
                 "metadata": {
                     "question_type": probe.get("question_type", "unknown"),
@@ -515,29 +512,6 @@ def _compute_metrics(
 def _slugify_metric_key(value: str) -> str:
     slug = re.sub(r"[^a-zA-Z0-9]+", "_", value.strip().lower()).strip("_")
     return slug or "unknown"
-
-
-def _run_cortex_preflight(config: V2RunConfig, logger: Any) -> None:
-    if config.dry_run or config.condition != "cortex":
-        return
-
-    logger.info("v2 preflight: checking cortex tools via /memories")
-    result = _send_to_openclaw(
-        message="/memories",
-        agent_id=config.agent_id,
-        session_id=f"benchmark-preflight-{int(time.time())}",
-        timeout_seconds=config.openclaw_timeout,
-    )
-    if result["error"]:
-        raise RuntimeError(f"Cortex preflight failed: {result['error']}")
-
-    tool_names = set(result.get("tool_names", []))
-    required_tools = {"cortex_search_memory", "cortex_save_memory"}
-    if not required_tools.issubset(tool_names):
-        raise RuntimeError(
-            "Cortex preflight failed: required tools missing in prompt metadata "
-            f"(found={sorted(tool_names)})"
-        )
 
 
 def _send_to_openclaw(

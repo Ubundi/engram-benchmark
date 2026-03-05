@@ -57,12 +57,6 @@ def build_parser() -> argparse.ArgumentParser:
 
     # V2 protocol options.
     parser.add_argument(
-        "--condition",
-        choices=["baseline", "cortex"],
-        default="baseline",
-        help="V2 mode only: runtime condition label (baseline or cortex).",
-    )
-    parser.add_argument(
         "--dry-run",
         action="store_true",
         help=(
@@ -142,7 +136,6 @@ def build_v2_config(args: argparse.Namespace) -> V2RunConfig:
         judge_temperature = 0.0
 
     return V2RunConfig(
-        condition=args.condition,
         agent_id=args.agent,
         data_path=args.data_path,
         output_dir=args.output_dir,

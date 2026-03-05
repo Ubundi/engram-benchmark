@@ -12,12 +12,18 @@ from benchmark.utils.io import read_jsonl
 
 def _default_split_path(split: str) -> Path:
     root = Path(__file__).resolve().parents[2]
-    split_path = root / "data" / "splits" / f"{split}.sample.jsonl"
-    if split_path.exists():
-        return split_path
+    # Canonical JSONL splits live in data/splits/
+    canonical = root / "data" / "splits" / f"{split}.jsonl"
+    if canonical.exists():
+        return canonical
+    # Legacy sample splits (dev.sample.jsonl, test.sample.jsonl, etc.)
+    sample = root / "data" / "splits" / f"{split}.sample.jsonl"
+    if sample.exists():
+        return sample
+    # Legacy v2 fallback at repo root
     if split == "v2":
         return root / "openclaw-memory-benchmark-v2.json"
-    return split_path
+    return canonical
 
 
 def _read_tasks(path: Path) -> list[dict[str, Any]]:
