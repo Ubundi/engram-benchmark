@@ -1,0 +1,2 @@
+{"id":"test-001","input":"What color is the daytime sky on a clear day?","reference_answer":"blue","metadata":{"source":"synthetic","difficulty":"easy"}}
+{"id":"test-002","input":"Complete: water freezes at 0 degrees ___.","reference_answer":"Celsius","metadata":{"source":"synthetic","difficulty":"easy"}}

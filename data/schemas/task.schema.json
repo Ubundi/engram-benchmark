@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/task.schema.json",
+  "title": "BenchmarkTask",
+  "type": "object",
+  "required": ["id", "input", "reference_answer"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reference_answer": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

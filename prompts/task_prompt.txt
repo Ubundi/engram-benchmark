@@ -1,0 +1,5 @@
+Task ID: {{task_id}}
+Task Input:
+{{task_input}}
+
+Return your final answer only.
