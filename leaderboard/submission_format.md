@@ -21,7 +21,7 @@ A valid submission must also provide (or reference) these files:
 - `run_metadata.json`
 - `metrics.json`
 - `predictions.jsonl`
-- protocol-specific evidence (for V2: `probes.jsonl`, `judgments.jsonl`)
+- phase artifacts: `seed_turns.jsonl`, `probes.jsonl`, `judgments.jsonl`
 
 ## Submission JSON schema
 

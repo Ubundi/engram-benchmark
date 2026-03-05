@@ -13,7 +13,7 @@
 3. **Template files** in place:
    - `templates/entity_seed.json`
    - `templates/session_templates.json`
-   - `openclaw-memory-benchmark-v2.json` (v2 questions to preserve)
+   - `openclaw-memory-benchmark-v2.json` (v2 questions to preserve — lives at repo root)
 
 ## Quick Start
 
@@ -31,7 +31,7 @@ This executes 6 phases:
 | 2 | Generate ~300 sessions via `claude -p` | ~60-90 min |
 | 3 | Generate ~500 questions via `claude -p` | ~45-60 min |
 | 4 | Run 10 validation checks | instant |
-| 5 | Export to `openclaw-memory-benchmark-v3.json` | instant |
+| 5 | Export to `data/raw/v3/openclaw-memory-benchmark-v3.json` | instant |
 | 6 | Print statistics report | instant |
 
 ## Incremental / Resumable
@@ -99,7 +99,8 @@ claude -p \
 
 ## Output
 
-- **Final benchmark**: `openclaw-memory-benchmark-v3.json`
+- **Raw benchmark JSON**: `data/raw/v3/openclaw-memory-benchmark-v3.json`
+- **Canonical benchmark split**: `data/splits/v3.jsonl` — regenerate after pipeline runs with `make ingest-v3`
 - **Session cache**: `cache/sessions/*.json` (one file per session)
 - **Question cache**: `cache/questions/*.json` (one file per question type)
 

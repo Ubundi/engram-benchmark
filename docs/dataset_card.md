@@ -1,19 +1,16 @@
-# Dataset Card
+# Dataset Card — Engram v3
 
 ## Dataset summary
 
-Current benchmark source datasets in this repository:
-- `openclaw-memory-benchmark-v2.json` (legacy V2 task set)
-- sample scaffold splits under `data/splits/*.sample.jsonl`
+**Engram v3** (`data/splits/v3.jsonl`) is a 504-task benchmark dataset for evaluating agent memory recall behavior. It covers 8 question types: temporal reasoning, multi-session recall, knowledge updates, cross-agent memory, multi-hop reasoning, recurring patterns, and single-session recall.
 
-The V2 dataset is used to evaluate runtime memory recall behavior under baseline and
-memory-augmented conditions.
+Source JSON: `data/raw/v3/engram-v3.json`.
 
 ## Provenance
 
-- V2 source: imported from historical plugin-repo benchmark assets.
-- Canonical conversion: performed at load time by `benchmark.tasks.legacy_v2`.
-- Included sample JSONL files are minimal CI-safe fixtures, not leaderboard-grade data.
+- Generated from synthetic multi-turn conversation histories designed to stress-test compaction-based memory systems.
+- Canonical JSONL produced by `make ingest-v3` via `benchmark.tasks.openclaw`.
+- Sample JSONL files (`*.sample.jsonl`) are minimal CI-safe fixtures, not leaderboard-grade data.
 
 ## Intended use
 
@@ -29,8 +26,7 @@ memory-augmented conditions.
 ## Licensing
 
 - Repository code and docs are MIT-licensed.
-- Dataset redistribution rights for imported legacy assets should be confirmed before
-  external republishing.
+- Dataset redistribution rights for imported assets should be confirmed before external republishing.
 
 ## PII policy
 
@@ -41,12 +37,11 @@ memory-augmented conditions.
 ## Data quality controls
 
 - Required canonical task fields: `id`, `input`, `reference_answer`.
-- Schema checks enforced by tests for sample splits.
+- Schema checks enforced by tests for sample splits and the full v3 dataset.
 - Runtime outputs include per-prompt evidence for audit.
 
 ## Known limitations
 
-- Current dataset package is legacy and pre-curated.
-- Coverage may not represent all memory failure modes in production agents.
-- Category balance and temporal complexity should be re-validated when the new dataset
-  package lands.
+- Dataset is synthetic; real agent sessions have more noise and topic-hopping.
+- Coverage may not represent all memory failure modes in production deployments.
+- Temporal reasoning tasks remain the hardest category for semantic retrieval systems.

@@ -34,7 +34,7 @@ Any operator-facing change must update relevant docs:
 - `README.md`
 - `docs/evaluation_protocol.md`
 - `docs/reproducibility.md`
-- `docs/v2/run_guide.md` (for V2 protocol changes)
+- `docs/benchmark_spec.md`
 
 ## Commit guidance
 

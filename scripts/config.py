@@ -1,5 +1,5 @@
 """
-Configuration for OpenClaw Memory Benchmark v3 generation pipeline.
+Configuration for Engram v3 generation pipeline.
 """
 
 import os
@@ -12,7 +12,7 @@ SCRIPTS_DIR = PROJECT_ROOT / "scripts"
 ENTITY_SEED_PATH = TEMPLATES_DIR / "entity_seed.json"
 SESSION_TEMPLATES_PATH = TEMPLATES_DIR / "session_templates.json"
 V2_BENCHMARK_PATH = PROJECT_ROOT / "openclaw-memory-benchmark-v2.json"
-V3_OUTPUT_PATH = PROJECT_ROOT / "openclaw-memory-benchmark-v3.json"
+V3_OUTPUT_PATH = PROJECT_ROOT / "data" / "raw" / "engram-v3.json"
 SESSIONS_CACHE_DIR = PROJECT_ROOT / "cache" / "sessions"
 QUESTIONS_CACHE_DIR = PROJECT_ROOT / "cache" / "questions"
 

@@ -23,7 +23,7 @@ def test_sample_tasks_validate_against_schema() -> None:
     schema = load_task_schema()
     required = set(schema.get("required", []))
 
-    for split in ("dev.sample.jsonl", "test.sample.jsonl", "v2.sample.jsonl"):
+    for split in ("dev.sample.jsonl", "test.sample.jsonl", "v3.jsonl"):
         tasks = _load_jsonl(root / "data" / "splits" / split)
         assert tasks, f"Expected at least one task in {split}"
         for task in tasks:
