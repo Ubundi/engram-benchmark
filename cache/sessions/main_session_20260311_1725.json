@@ -1,0 +1,85 @@
+{
+  "index": 175,
+  "session_id": "main_session_20260311_1725",
+  "session_type": "design_planning",
+  "agent": "main",
+  "datetime": "2026-03-11T17:25:00",
+  "formatted_date": "2026/03/11 (Wed) 17:25",
+  "week": "week_3",
+  "theme": "Rapid iteration",
+  "content_domain": "config_changes",
+  "target_messages": 19,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hey Echo \u2014 wrapping up the day here but want to lock in a design session before I sign off. We've got a few config changes piling up that need to be coordinated: the worker model upgrade, the calendar and GitHub Actions integration hooks, and I want to revisit how TrustAlign's new scoring model feeds into the sub-agent decision layer. Can you take point on proposing a consolidated config change plan?",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "Absolutely, Alex. Good timing \u2014 I've been tracking all three threads across today's sessions and there's some natural consolidation we can do here.\n\n**Initial Design Draft: Consolidated Config Change Plan v0.1**\n*Session: design_planning \u00b7 config_changes \u00b7 2026-03-11 17:25 SAST*\n\n---\n\n### Scope Summary\n\nI'm seeing three change clusters:\n\n1. **Worker model upgrade** \u2014 consideration to move worker from the current `claude-haiku-3-5` baseline to `claude-sonnet-3-7` for heavier tool-execution tasks\n2. **Integration hooks** \u2014 calendar (read/write) and GitHub Actions (trigger + status polling) need to be registered as new worker capabilities\n3. **TrustAlign scoring \u2192 sub-agent routing** \u2014 updated scoring model (v2.4, deployed this week) should influence which sub-agent handles ambiguous requests\n\nWant me to lay out an initial architecture for each before we iterate?",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "Here's the **initial design skeleton** across all three:\n\n---\n\n#### 1. Worker Model Upgrade\n- **Proposed config:** Set `worker.model = claude-sonnet-3-7` with a `task_complexity_threshold` gating \u2014 simple tool calls (< 3 steps, no branching) stay on haiku, complex chains promote to sonnet\n- **Cost implication:** Estimated +18\u201322% on worker token spend; partially offset by the cost optimization sprint running this week\n- **Rollout:** Feature-flag it as `WORKER_MODEL_TIERED=true`, default off until benchmarked\n\n#### 2. Integration Hooks (Calendar + GitHub Actions)\n- Register both as `worker.capabilities[]` entries in `agent_config.yaml`\n- Calendar: scoped to `read` + `write` with a 15-min lookahead window by default\n- GitHub Actions: `trigger` + `poll_status` \u2014 needs a PAT stored in secrets vault, not config file\n- Dependency: both hooks need the new MemorySync v3 benchmark results to confirm latency is acceptable (<800ms p95)\n\n#### 3. TrustAlign Scoring \u2192 Sub-agent Routing\n- TrustAlign v2.4 now outputs a `risk_band` field (`low / medium / high / critical`)\n- Proposal: route `high` and `critical` band requests through trustalign for human-review flag before dispatching to engage-x or contentway\n- `medium` band requests get a 200ms delay + logged for async review\n- `low` band: unchanged flow\n\n---\n\nThoughts before I go deeper?",
+      "has_answer": false
+    },
+    {
+      "role": "user",
+      "content": "This is a solid start. A few things: on the worker upgrade, I don't want to gate purely on step-count \u2014 some 2-step tasks are way more expensive than 5-step ones depending on context size. And on the TrustAlign routing, the 200ms delay on medium-band feels arbitrary. What's the rationale there? Also, are we sure the circuit breaker (currently closed) won't trip from the integration hooks adding load?",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "All three are fair pushes. Let me expand on each:\n\n---\n\n#### 1. Worker Upgrade Gating \u2014 Revised Thinking\n\nYou're right that step-count is a weak proxy. Better signal is **estimated token volume at dispatch time**, which we can approximate using:\n\n- `prompt_token_estimate` (from the task planner's dry-run)\n- `context_window_load` (how full the active context is when the task fires)\n- `tool_chain_depth` (still useful, but as a secondary signal)\n\nProposed new gate: promote to sonnet if `(prompt_token_estimate > 4,200) OR (context_window_load > 0.65)`. That threshold comes from the MemorySync benchmarks published internally this week \u2014 they showed haiku degradation starts around 4K prompt tokens on tool-heavy tasks.\n\n---\n\n#### 2. TrustAlign Medium-Band Delay\n\nHonestly, the 200ms was a placeholder I carried over from an earlier draft \u2014 you're right to flag it. The actual mechanism should be **queue-based, not time-based**. Medium-band requests go into a `review_queue` that contentway or I can inspect asynchronously; they dispatch immediately unless a human explicitly holds them. No arbitrary delay.\n\n---\n\n#### 3. Circuit Breaker + Integration Load\n\nCircuit breaker is currently **closed** (healthy), which means it's passing traffic normally. The risk with calendar and GitHub Actions hooks is burst load during morning syncs or CI pipeline events \u2014 those could spike worker call volume 3\u20134x briefly.\n\nMitigation: add **per-integration rate limits** in config (`calendar.max_calls_per_min = 12`, `github_actions.max_calls_per_min = 8`) and wire them to the circuit breaker's `half_open` threshold so it degrades gracefully rather than hard-tripping.",
+      "has_answer": false
+    },
+    {
+      "role": "user",
+      "content": "On the MemorySync benchmark data \u2014 where exactly did the 4,200 token degradation threshold come from? Is that the p50, p95, or something else? I want to make sure we're not baking in a number that'll bite us under load.",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "Good catch \u2014 I should be precise here. The 4,200 figure is the **p75 inflection point** from the MemorySync v3 internal benchmark published earlier this week. Specifically:\n\n| Percentile | Haiku degradation onset (prompt tokens) |\n|---|---|\n| p50 | ~3,800 |\n| p75 | ~4,200 |\n| p95 | ~5,100 |\n| p99 | ~6,400 |\n\n\"Degradation\" in this context = tool-call accuracy drops below 91% on multi-step chains (MemorySync's defined threshold for acceptable worker output quality).\n\n**My recommendation:** use the **p50 (3,800 tokens)** as the promotion threshold for the config, not p75. Here's why:\n\n- We're in a rapid iteration phase \u2014 erring toward sonnet quality now is cheaper than debugging haiku failures at 4K tokens\n- The cost delta between p50 and p75 thresholds is estimated at ~6% additional sonnet calls, which is within the cost optimization sprint's acceptable variance band\n- We can tighten the threshold back to p75 once we have two weeks of production data\n\nI'd also add a `WORKER_PROMOTE_THRESHOLD_TOKENS` env var so you can tune it at runtime without a config redeploy.",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "One more thing worth flagging on the benchmark data:\n\nThe MemorySync numbers were run against **isolated single-agent workloads**. In Beacon Studio's actual setup, worker operates alongside engage-x and contentway sharing the same rate-limit pool. Under concurrent load (which we saw spikes of during the agent observability threads session this morning), the effective degradation onset could shift lower \u2014 possibly closer to **3,400\u20133,600 tokens** under heavy multi-agent concurrency.\n\nI'd recommend we note this as a **known caveat** in the config documentation and schedule a Beacon-specific load test in the next sprint (week of March 16) before we move `WORKER_MODEL_TIERED` to default-on. Does that timeline work for you?",
+      "has_answer": false
+    },
+    {
+      "role": "user",
+      "content": "Yes, March 16 works. Okay, let me give you the refinements to lock in:\n\n1. Token threshold \u2192 p50 (3,800), with the env var override\n2. Drop the 200ms delay entirely, use the async review queue for medium-band TrustAlign\n3. Rate limits on integrations as you described \u2014 12/min calendar, 8/min GitHub Actions\n4. Also: I've been thinking about the researcher sub-agent we discussed earlier this week. If we're already touching agent_config.yaml, let's stub in a placeholder config block for it so it's ready when we pull the trigger\n5. PAT for GitHub Actions goes in the secrets vault, not config \u2014 confirmed",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "Got it. Locking all five refinements. Here's the **Refined Design v1.0**:\n\n---\n\n## Config Change Plan v1.0 \u2014 Refined\n*Beacon Studio \u00b7 Echo \u00b7 2026-03-11 17:25 SAST*\n\n---\n\n### `agent_config.yaml` \u2014 Change Summary\n\n```yaml\n# Worker model tiering\nworker:\n  model_default: claude-haiku-3-5\n  model_elevated: claude-sonnet-3-7\n  tiering:\n    enabled: false  # feature-flagged: WORKER_MODEL_TIERED\n    promote_on:\n      prompt_token_estimate_gte: 3800  # p50 from MemorySync v3 benchmarks\n      context_window_load_gte: 0.65\n    # Override via env: WORKER_PROMOTE_THRESHOLD_TOKENS\n\n# Integration capabilities\n  capabilities:\n    - id: calendar\n      scope: [read, write]\n      lookahead_window_min: 15\n      rate_limit:\n        max_calls_per_min: 12\n      circuit_breaker_linked: true\n    - id: github_actions\n      scope: [trigger, poll_status]\n      auth: secrets_vault  # PAT stored in vault, NOT here\n      rate_limit:\n        max_calls_per_min: 8\n      circuit_breaker_linked: true\n\n# TrustAlign routing\ntrustalign:\n  scoring_model: v2.4\n  routing:\n    low: pass_through\n    medium: async_review_queue  # no delay; dispatches immediately, logged\n    high: human_review_flag\n    critical: human_review_flag\n\n# Researcher sub-agent (stub \u2014 not active)\nresearcher:\n  enabled: false\n  model: TBD\n  capabilities: []  # placeholder\n  scope: []\n  notes: \"Stub added 2026-03-11. Activate when design finalised.\"\n```\n\n---\n\n### What's NOT in this config\n- GitHub Actions PAT \u2192 secrets vault (`vault.beacon.github_actions_pat`)\n- `WORKER_MODEL_TIERED` flag \u2192 environment config (default: `false`)",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "### Rollout Sequence\n\n| Step | Action | Owner | Target Date |\n|---|---|---|---|\n| 1 | Merge `agent_config.yaml` changes (all blocks above) | Echo / worker | 2026-03-12 |\n| 2 | Store GitHub Actions PAT in secrets vault | Alex | 2026-03-12 |\n| 3 | Enable calendar + GitHub Actions hooks in staging | worker | 2026-03-12 |\n| 4 | TrustAlign v2.4 routing goes live (medium\u2192queue) | trustalign | 2026-03-12 |\n| 5 | Load test: Beacon-specific MemorySync rerun | Echo | 2026-03-16 |\n| 6 | Flip `WORKER_MODEL_TIERED=true` if load test passes | Alex approval required | 2026-03-17 |\n| 7 | Researcher sub-agent design session | TBD | Week of 2026-03-23 |\n\n---\n\n### Open Items\n- [ ] Confirm `async_review_queue` retention window for medium-band TrustAlign logs (suggest 72h, purge after)\n- [ ] Decide researcher sub-agent model before week of March 23\n- [ ] Post load test results to `#beacon-infra` channel\n\nReady for your approval on v1.0 before I hand off to worker for implementation.",
+      "has_answer": false
+    },
+    {
+      "role": "user",
+      "content": "Approved. 72h retention on the medium-band queue sounds right \u2014 let's go with that. Kick it off.",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "**Approved. Initiating implementation handoff.**\n\n---\n\n### Dispatching to worker\n\nFiling the following task chain now:\n\n```\n[worker_task] config_changes \u00b7 2026-03-11 17:28 SAST\n  > Write: agent_config.yaml (worker tiering, integrations, trustalign routing, researcher stub)\n  > Write: .env.example (add WORKER_MODEL_TIERED, WORKER_PROMOTE_THRESHOLD_TOKENS)\n  > Verify: circuit_breaker integration linkage for calendar + github_actions\n  > Update: trustalign medium-band \u2192 async_review_queue (retention: 72h)\n  > Flag: secrets vault entry required for github_actions PAT (manual step, owner: Alex)\n```\n\nUpdating `async_review_queue` retention to **72 hours** in the config block \u2014 confirmed.",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "### Session Summary\n*design_planning \u00b7 config_changes \u00b7 Echo \u00b7 2026-03-11 17:28 SAST*\n\n**Decisions locked:**\n- Worker model tiering: enabled via feature flag, p50 threshold (3,800 tokens), env var override available\n- GitHub Actions + calendar hooks registered; PAT in vault, rate limits applied, circuit breaker linked (currently: closed / healthy)\n- TrustAlign v2.4 routing: medium-band \u2192 async queue (72h retention, no delay), high/critical \u2192 human review flag\n- Researcher sub-agent stubbed in config; design session targeting week of March 23\n- Beacon-specific load test scheduled March 16 before `WORKER_MODEL_TIERED` goes default-on\n\n**Next milestone:** Worker delivers config changes to staging by end of day March 12.\n\nGood session, Alex \u2014 clean set of changes and a clear rollout path. Enjoy the rest of your evening. \ud83d\udd27",
+      "has_answer": false
+    }
+  ],
+  "message_count": 14
+}

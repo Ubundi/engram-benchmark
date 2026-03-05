@@ -1,0 +1,65 @@
+{
+  "index": 11,
+  "session_id": "heartbeat_20260222_1729",
+  "session_type": "heartbeat",
+  "agent": "main",
+  "datetime": "2026-02-22T17:29:00",
+  "formatted_date": "2026/02/22 (Sun) 17:29",
+  "week": "week_1",
+  "theme": "System setup & launch",
+  "content_domain": "task_staleness",
+  "target_messages": 10,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Echo, run heartbeat check \u2014 session type: `heartbeat`, domain: `task_staleness`. Timestamp: 2026/02/22 (Sun) 17:29 SAST.",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "## \ud83d\udc93 Heartbeat \u2014 Task Staleness Audit\n**Session ID:** `heartbeat_20260222_1729`\n**Timestamp:** 2026/02/22 17:29 SAST\n**Agent:** Echo (main)\n\n---\n\n### \ud83d\uddc2\ufe0f Stale Task Scan Results\n\nScanning open task queue against last-activity timestamps...\n\n| Task ID | Description | Last Touch | Age | Status |\n|---|---|---|---|---|\n| `TASK-041` | Browser automation fallback config | 2026/02/19 | **3d** | \u26a0\ufe0f Stale |\n| `TASK-038` | CodexAI onboarding flow QA pass | 2026/02/20 | **2d** | \u26a0\ufe0f Stale |\n| `TASK-044` | TrustAlign sub-agent scope doc | 2026/02/21 | 1d | \ud83d\udfe1 Aging |\n| `TASK-047` | Planner-executor model spec review | 2026/02/22 08:05 | <12h | \u2705 Fresh |\n| `TASK-049` | File ops integrity check | 2026/02/22 13:04 | <5h | \u2705 Fresh |\n\n**Summary:** 2 stale tasks (>48h untouched), 1 aging, 2 fresh.\n\n> \u26a0\ufe0f `TASK-041` is highest priority \u2014 browser issues flagged during Week 1 remain unresolved.",
+      "has_answer": false
+    },
+    {
+      "role": "user",
+      "content": "What's the blocker on TASK-041? And why is TASK-038 stale \u2014 CodexAI went live this week, I'd expect that to be wrapped up.",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "### \ud83d\udd0d Blocker Detail \u2014 TASK-041 & TASK-038\n\n---\n\n#### `TASK-041` \u2014 Browser Automation Fallback Config\n**Last owner:** worker sub-agent\n**Blocker type:** Environment dependency\n\nThe browser issues that surfaced around 2026/02/19 were traced to a Playwright session leak in the worker's headless Chrome pool. The fix requires a config change to `worker/browser_pool.yaml` \u2014 specifically the `max_sessions` and `idle_timeout_ms` parameters. However, the updated config template was pending sign-off on the circuit breaker thresholds we reviewed in the heartbeat session at 23:47 on 2026/02/21.\n\nThat sign-off was never recorded as complete. **Task is blocked on a dependency closure that got lost between sessions.**\n\n---\n\n#### `TASK-038` \u2014 CodexAI Onboarding Flow QA Pass\n**Last owner:** Echo (me)\n**Blocker type:** Scope drift / deprioritisation\n\nCodexAI went live with first users on 2026/02/20, but the QA pass got deprioritised when the social engagement pipeline work (engage-x) pulled attention on 2026/02/20 afternoon. The onboarding flow was considered \"good enough\" for early users but the formal QA checklist \u2014 14 items \u2014 is only ~60% complete.\n\n**Risk:** With real users now in the funnel, any onboarding friction compounds daily. This should not stay stale.\n\n---\n\n**Root cause pattern:** Both tasks lost momentum during context switches tied to the sub-agent buildout week (TrustAlign creation, engage-x pipeline). Classic Week 1 sprawl.",
+      "has_answer": false
+    },
+    {
+      "role": "user",
+      "content": "OK. Close out the circuit breaker dependency for TASK-041 \u2014 I'm signing off on the thresholds we set Friday night. And escalate TASK-038 to P1, assign it to worker for a QA sweep first thing tomorrow. Log both updates.",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "### \u2705 Task Updates Logged\n**Timestamp:** 2026/02/22 17:34 SAST\n**Authorised by:** Alex\n\n---\n\n#### `TASK-041` \u2014 Dependency Closure\n\n```\n[UPDATE] TASK-041\nBlocker: circuit_breaker_threshold_signoff \u2192 RESOLVED\nAuthority: Alex (verbal, 2026/02/22 17:34 SAST)\nRef session: heartbeat_20260221_2347 (thresholds discussed)\nNext action: worker to apply browser_pool.yaml patch\n  - max_sessions: 6\n  - idle_timeout_ms: 45000\n  - breaker_threshold: 3 consecutive failures\nStatus: UNBLOCKED \u2192 assigned to worker, priority P2\nTarget: 2026/02/23 EOD\n```\n\n---\n\n#### `TASK-038` \u2014 Escalation to P1\n\n```\n[UPDATE] TASK-038\nPriority: P3 \u2192 P1\nAssigned to: worker sub-agent\nScheduled start: 2026/02/23 08:00 SAST\nScope: Complete remaining 6/14 QA checklist items\n  - Error state handling (steps 9\u201311)\n  - Mobile viewport rendering (steps 12\u201313)\n  - Session persistence on reload (step 14)\nRisk note: CodexAI active users = ~12 as of today\nStatus: ESCALATED \u2192 queued for worker morning sweep\nTarget: 2026/02/23 12:00 SAST\n```\n\n---\n\n\ud83d\udd14 worker sub-agent notified via internal task bus. Both updates written to `task_log_20260222.jsonl`.",
+      "has_answer": false
+    },
+    {
+      "role": "user",
+      "content": "Good. What's the broader lesson here for task hygiene? We can't keep losing context on blockers between sessions.",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "### \ud83d\udccc Lesson \u2014 Cross-Session Blocker Hygiene\n\nThis week exposed a structural gap: **blockers that depend on decisions made in one session aren't reliably tracked into the next session's context.** TASK-041 is the clearest example \u2014 the circuit breaker sign-off happened at 23:47 on Friday, but by Saturday morning that dependency wasn't surfaced in any active queue.\n\nHere's the pattern I'm flagging for the self-improvement review process we started this morning (`main_session_20260222_0805`):\n\n---\n\n#### \ud83d\udd01 Root Cause\nWhen a task is blocked on a **human decision** (not a technical dependency), it exits the active worker queue and silently ages. There's no polling mechanism to re-surface it unless a heartbeat explicitly scans for stale items \u2014 which is exactly what this session is for, but only if heartbeats run frequently enough.\n\n#### \ud83d\udee0\ufe0f Proposed Fix \u2014 Three-Layer Blocker Protocol\n\n1. **Blocker tagging at time of block** \u2014 Any task moved to `BLOCKED` state must have a `blocker_type` and `blocker_owner` field set. Human-owned blockers get a 24h TTL before auto-escalation to heartbeat queue.\n\n2. **Session handoff stubs** \u2014 At the close of any session where a decision is *deferred*, Echo generates a one-line stub in `pending_decisions.md`. This survived the Friday night session gap that cost us 3 days on TASK-041.\n\n3. **Heartbeat staleness threshold = 36h** \u2014 Tasks untouched for 36h surface automatically in the next heartbeat. Current implicit threshold was somewhere around 72h based on this scan.\n\n---\n\nI'll draft this as a formal hygiene rule for the Week 1 \u2192 Week 2 retrospective. The planner-executor model we documented this week is the right skeleton \u2014 it just needs explicit blocker lifecycle hooks added.\n\n> TL;DR: Decisions deferred between sessions need a physical artifact. Memory alone doesn't survive context switches.",
+      "has_answer": false
+    },
+    {
+      "role": "user",
+      "content": "Draft that hygiene rule now and add it to the system docs.",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "### \ud83d\udcdd Drafting \u2014 Cross-Session Blocker Hygiene Rule\n**Target file:** `docs/system/task_hygiene.md`\n**Section:** Blocker Lifecycle Protocol\n\n---\n\nWriting to system docs now...\n\n```markdown\n## Rule: Cross-Session Blocker Lifecycle Protocol\n**Added:** 2026/02/22 \u2014 Echo (heartbeat_20260222_1729)\n**Review by:** 2026/03/01\n\n### Scope\nApplies to all tasks in the OpenClaw task bus that enter a BLOCKED state,\nregardless of sub-agent ownership.\n\n### Protocol\n\n**1. Blocker Registration (at time of block)**\nEvery BLOCKED task must record:\n- `blocker_type`: one of `human_decision | technical | external | dependency`\n- `blocker_owner`: agent ID or \"alex\"\n- `blocker_created_at`: ISO timestamp (SAST)\n- `blocker_ttl_hours`: default 24h for human_decision, 48h for technical\n\n**2. Pending Decision Stub**\nIf a session ends with any deferred human decision, Echo appends to\n`docs/pending_decisions.md`:\n  > [DATE] [TASK-ID] \u2014 [one-line decision description] \u2014 Owner: Alex\n\nThis file is read at the start of every heartbeat session.\n\n**3. Heartbeat Staleness Threshold**\n- Tasks untouched for **36 hours** auto-surface in the next heartbeat scan.\n- Previous implicit threshold (~72h) is formally retired as of this rule.\n\n**4. Blocker Closure**\nWhen a blocker is resolved (verbally or in-session), the resolving agent must:\n- Record authority (who resolved, timestamp, ref session ID)\n- Update task status from BLOCKED \u2192 UNBLOCKED\n- Assign next action owner before closing the update\n\n### Origin\nDerived from TASK-041 postmortem (2026/02/22). Circuit breaker sign-off\nmade in heartbeat_20260221_2347 was not propagated, causing 3-day stall.\nSee also: error_patterns review in main_session_20260222_0805.\n```\n\n---\n\n\u2705 **Written to:** `docs/system/task_hygiene.md`\n\u2705 **Appended to:** `docs/pending_decisions.md` (cleared \u2014 no open deferred decisions as of this session)\n\u2705 **Logged in:** `heartbeat_20260222_1729` session record\n\nThis rule will be included in the Week 1 \u2192 Week 2 retrospective brief. Want me to flag it for TrustAlign review as an alignment-adjacent process change?",
+      "has_answer": false
+    }
+  ],
+  "message_count": 10
+}

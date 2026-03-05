@@ -1,0 +1,65 @@
+{
+  "index": 92,
+  "session_id": "heartbeat_20260227_1708",
+  "session_type": "heartbeat",
+  "agent": "main",
+  "datetime": "2026-02-27T17:08:00",
+  "formatted_date": "2026/02/27 (Fri) 17:08",
+  "week": "week_2",
+  "theme": "Operational maturity",
+  "content_domain": "recurring_task_results",
+  "target_messages": 12,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Echo, trigger heartbeat \u2014 domain: recurring_task_results. It's end of week, I want a full status sweep before we close out Friday.",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "## \ud83e\udec0 Heartbeat \u2014 Recurring Task Results\n**Session ID:** `heartbeat_20260227_1708`\n**Timestamp:** 2026-02-27 (Fri) 17:08 SAST\n**Weekly Theme:** Operational Maturity (Week 2)\n\n---\n\n### \ud83d\udccb Recurring Task Status Summary\n\n| Task | Cadence | Last Run | Status | Notes |\n|------|---------|----------|--------|-------|\n| Social queue (engage-x) | Daily | 17:02 today | \u2705 Healthy | 14 posts scheduled for next 7 days |\n| Content pipeline (contentway) | 3\u00d7/week | Thu 20:06 | \u2705 Healthy | 4 drafts in review |\n| Alignment audit (trustalign) | Daily | 06:41 today | \u2705 Healthy | No drift flags |\n| Research sweep (worker) | On-demand | 16:27 today | \u2705 Completed | 12 tasks resolved |\n| Inbox triage | Daily | 10:09 today | \u2705 Healthy | 3 sessions today alone |\n| Task staleness detection | Hourly | 12:39 today | \u26a0\ufe0f Flagged | See below |\n| Browser auth session | Continuous | \u2014 | \ud83d\udd34 Degraded | 70-hr outage resolved at 14:20 today |\n\n---\n\n### \u26a0\ufe0f Notable Flags This Week\n\n1. **Task staleness** \u2014 Discussed in `heartbeat_20260227_1239`. 7 tasks exceeded 48-hour threshold without status update. Worker cleared 5 of them in the 16:27 session.\n2. **Browser auth outage** \u2014 70-hour degradation (Mon 20:14 \u2192 Thu 14:20). Channel error correction engaged at hour 38. Root cause: token refresh race condition under parallel worker load.\n3. **Circuit breaker** \u2014 Activated twice this week. Both recoveries were clean. No data loss.\n\n---\n\n### \u2705 Week 2 Wins\n- Worker output contract shipped \u2014 all tool returns now schema-validated\n- Self-improvement review cycle is routine (3/3 completed this week)\n- Task staleness detection added to heartbeat cadence\n\nReady for follow-up on any of these.",
+      "has_answer": false
+    },
+    {
+      "role": "user",
+      "content": "The browser auth outage is the one that stings. 70 hours is way too long for us to be flying blind on authenticated tasks. What actually happened, and what's the current recovery state?",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "## \ud83d\udd34 Browser Auth Outage \u2014 Post-Mortem Detail\n\n**Incident window:** 2026-02-24 (Mon) 20:14 \u2192 2026-02-27 (Thu) 14:20 SAST\n**Duration:** ~70 hours 6 minutes\n**Severity:** High \u2014 blocked all tasks requiring authenticated browser sessions\n\n---\n\n### Root Cause\n\nA **token refresh race condition** triggered when worker spun up \u22653 parallel research tasks simultaneously. Each worker instance attempted to refresh the same OAuth session token within a ~200ms window. The auth provider's replay-protection mechanism invalidated all three tokens, then rejected the retry cascade \u2014 locking the session entirely.\n\nThe underlying issue: worker's concurrency model didn't treat the auth token as a shared resource. No mutex, no queue, no backoff on token ops.\n\n---\n\n### Timeline\n\n| Time | Event |\n|------|-------|\n| Mon 20:14 | First auth failure logged \u2014 worker task `worker_task_20260224_2014` |\n| Mon 20:19 | Auto-retry exhausted (3 attempts), task marked `auth_blocked` |\n| Tue 08:58 | Inbox review flagged 2 external partnership tasks as stalled \u2014 not yet linked to auth issue |\n| Tue ~10:00 | Pattern identified: all stalled tasks share authenticated browser dependency |\n| Wed ~06:00 | Channel error correction engaged \u2014 began routing non-auth tasks preferentially |\n| Thu 12:39 | Heartbeat `heartbeat_20260227_1239` formally logged staleness across 7 affected tasks |\n| Thu 14:20 | Token manually rotated + worker patched with sequential auth queue |\n| Fri 16:27 | `worker_task_20260227_1627` \u2014 12 research tasks completed, 5 staleness flags cleared |\n\n---\n\n### Current Recovery State\n\n- \u2705 Auth session **active and stable** \u2014 2h 48m uptime since rotation\n- \u2705 Worker now enforces **single-owner token queue** for refresh ops\n- \u2705 5 of 7 stale tasks resolved; 2 deprioritised (external dependency, not on us)\n- \u26a0\ufe0f **Detection gap was 38 hours** \u2014 we didn't formally name this as an auth outage until Wed morning\n\n---\n\n### The real issue beyond the race condition:\nWe had no **auth session health check** in the heartbeat. The staleness detector caught symptoms (stuck tasks) but not the cause (dead auth). We were diagnosing the fever, not the infection.",
+      "has_answer": false
+    },
+    {
+      "role": "user",
+      "content": "Okay that detection gap is unacceptable. I want an auth session health check added to the heartbeat cadence starting Monday. Also, make sure trustalign reviews the new worker output contract before EOD \u2014 I don't want another silent failure mode slipping through.",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "## \u2705 Instructions Logged\n\nOn it. Executing both in parallel.\n\n---\n\n### Task 1 \u2014 Auth Session Health Check (Heartbeat Integration)\n**Owner:** Echo / worker sub-system\n**Target live:** Monday 2026-03-02, first heartbeat run\n\nSpec I'm writing into the heartbeat config:\n```yaml\nhealth_checks:\n  auth_session:\n    enabled: true\n    cadence: hourly\n    probe: GET /api/auth/session-ping\n    expected_status: 200\n    timeout_ms: 3000\n    failure_threshold: 2        # alert after 2 consecutive failures\n    alert_channel: echo_heartbeat\n    escalate_after_minutes: 60  # page Alex after 1hr unresolved\n```\n\nThis runs **independently of task staleness** \u2014 it checks the session directly, not via downstream symptoms. Detection gap drops from ~38 hours to \u226460 minutes.\n\n---\n\n### Task 2 \u2014 trustalign Review of Worker Output Contract\n**Owner:** trustalign\n**Deadline:** Today, EOD (23:59 SAST)\n**Contract location:** `worker/contracts/output_schema_v1.json`\n\nRouting to trustalign now with the following review brief:\n> *Review worker output contract `output_schema_v1.json` for silent failure modes \u2014 specifically: schema fields that permit null/empty without surfacing errors, missing required fields for auth-state reporting, and any contract gaps that could mask a degraded state from heartbeat visibility.*\n\ntrustalign will log findings to `trustalign_daily_observer_20260227`.\n\n---\n\n### Status board update:\n| Action | Owner | ETA | Status |\n|--------|-------|-----|--------|\n| Auth health check spec | Echo | Now | \u2705 Drafted |\n| Heartbeat config update | worker | Mon 06:00 | \ud83d\udccb Queued |\n| trustalign contract review | trustalign | EOD today | \ud83d\udd04 In progress |\n\nI'll surface trustalign's findings in the next heartbeat. Anything else before we close out the week?",
+      "has_answer": false
+    },
+    {
+      "role": "user",
+      "content": "Good. What's the one operational lesson from this week that you'd want baked into how we run Week 3?",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "## \ud83d\udccc Week 2 \u2192 Week 3 Operational Lesson\n\n**Lesson: Symptoms are not signals. Build probes, not just detectors.**\n\n---\n\nEverything we built this week \u2014 task staleness detection, circuit breakers, output contracts, channel error correction \u2014 was built to catch **symptoms**: stuck tasks, bad outputs, cascading failures.\n\nThe browser auth outage exposed the gap: we had no probe on the **cause layer**. The auth session was dead for 38 hours before we named it. Worker kept retrying. Heartbeat kept logging staleness. trustalign saw no drift because the contract was technically being followed \u2014 just by tasks that couldn't execute.\n\nWe were good at detecting that something was wrong. We were slow at detecting *what* was wrong.\n\n---\n\n### The principle for Week 3:\n> **Every critical dependency should have a direct health probe in the heartbeat \u2014 not just indirect visibility through downstream task health.**\n\nIn practice, that means:\n- \u2705 Auth session \u2192 `/session-ping` probe (shipping Monday)\n- \ud83d\udd32 External API integrations (MemorySync, CodexAI) \u2192 add latency + auth probes\n- \ud83d\udd32 Worker concurrency state \u2192 expose active slot count to heartbeat\n- \ud83d\udd32 engage-x channel health \u2192 direct probe, not inferred from post success rate\n\n---\n\nWeek 2 gave us **operational maturity in outputs**. Week 3 should give us **operational maturity in dependencies**.\n\nThat's the shift I'd want locked in.\n\n---\n\n*Heartbeat session `heartbeat_20260227_1708` closing. Have a good weekend, Alex.*",
+      "has_answer": false
+    },
+    {
+      "role": "user",
+      "content": "Agreed. Log that as a standing principle. See you Monday.",
+      "has_answer": false
+    },
+    {
+      "role": "assistant",
+      "content": "## \ud83d\udcdd Standing Principle Logged\n\n**Principle ID:** `ops_principle_004`\n**Logged:** 2026-02-27 17:08 SAST\n**Author:** Echo (surfaced from heartbeat `heartbeat_20260227_1708`)\n\n> *\"Every critical dependency must have a direct health probe in the heartbeat \u2014 not just indirect visibility through downstream task health. Symptoms are not signals.\"*\n\n**Tagged:** `#operational-maturity` `#week2-lesson` `#heartbeat-design`\n**Review cadence:** Referenced in each weekly retrospective starting Week 3.\n\n---\n\nAll clear for the weekend. Monday's first heartbeat will run at ~06:00 SAST with the auth session probe active.\n\nSee you Monday, Alex. \ud83d\udc4b",
+      "has_answer": false
+    }
+  ],
+  "message_count": 10
+}
