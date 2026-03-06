@@ -11,6 +11,7 @@ Each submission must include:
 - `run_id`: run directory identifier
 - `agent_name`: evaluated system name
 - `agent_version`: version, image tag, or commit SHA
+- `answer_model`: evaluated model used to generate benchmark answers
 - `timestamp_utc`: ISO-8601 timestamp
 - `task_split`: evaluated split or dataset identifier
 - `metrics`: numeric metrics object
@@ -35,6 +36,7 @@ A valid submission must also provide (or reference) these files:
     "run_id",
     "agent_name",
     "agent_version",
+    "answer_model",
     "timestamp_utc",
     "task_split",
     "metrics"
@@ -44,6 +46,7 @@ A valid submission must also provide (or reference) these files:
     "run_id": { "type": "string", "minLength": 1 },
     "agent_name": { "type": "string", "minLength": 1 },
     "agent_version": { "type": "string", "minLength": 1 },
+    "answer_model": { "type": "string", "minLength": 1 },
     "timestamp_utc": { "type": "string", "format": "date-time" },
     "task_split": { "type": "string", "minLength": 1 },
     "metrics": {
@@ -64,6 +67,7 @@ A valid submission must also provide (or reference) these files:
 ## Validation rules
 
 - Submissions without required fields are invalid.
+- `answer_model` must match the value recorded in `run_metadata.json`.
 - Metric keys must match documented protocol metrics.
 - Submission must be reproducible from attached artifacts.
 - Any known run failures must be disclosed in `notes`.

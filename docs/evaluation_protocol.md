@@ -46,3 +46,5 @@ A benchmark run is considered auditable only if the output directory contains:
 - `metrics.json`
 - `predictions.jsonl`
 - phase artifacts: `seed_turns.jsonl`, `probes.jsonl`, `judgments.jsonl`
+
+Official reports must also disclose the evaluated `answer_model`. Direct benchmark deltas should keep that model fixed; if it changes, treat the result as a separate system track rather than a controlled within-system comparison.

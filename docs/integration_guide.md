@@ -314,7 +314,7 @@ Each run writes to `outputs/<run_id>/`:
 | `seed_turns.jsonl` | Seed results per task with latency |
 | `judgments.jsonl` | Per-task judge scores (0–3), pass scores, rationale |
 | `metrics.json` | Aggregated metrics |
-| `run_metadata.json` | Run config, git commit, and counts |
+| `run_metadata.json` | Run config, answer model, git commit, and counts |
 | `report.md` | Human-readable Markdown report with per-probe detail |
 
 ### Key metrics

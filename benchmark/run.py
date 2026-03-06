@@ -61,6 +61,15 @@ def build_parser() -> argparse.ArgumentParser:
         help=("Agent adapter: local_stub, openclaw, codex, openai, or an http(s):// URL."),
     )
     parser.add_argument(
+        "--answer-model",
+        default=os.getenv("ANSWER_MODEL"),
+        help=(
+            "Evaluated model used to generate agent answers "
+            "(for example anthropic/claude-sonnet-4-6). "
+            "Record this for official submissions and direct comparisons."
+        ),
+    )
+    parser.add_argument(
         "--split",
         default="v3",
         help="Dataset split to load (default: v3).",
@@ -188,6 +197,7 @@ def _build_run_config(args: argparse.Namespace) -> RunConfig:
     settle = _resolve_settle_seconds(args.settle_seconds, args.condition)
     merged: dict[str, Any] = {
         "agent": args.agent,
+        "answer_model": args.answer_model,
         "split": args.split,
         "data_path": args.data_path,
         "output_dir": args.output_dir,
@@ -369,6 +379,7 @@ def run_benchmark(config: RunConfig) -> dict[str, Any]:
     run_metadata: dict[str, Any] = {
         "benchmark_release": BENCHMARK_RELEASE,
         "protocol_version": PROTOCOL_VERSION,
+        "answer_model": config.answer_model,
         "official_setting": {
             "split": OFFICIAL_SPLIT,
             "judge_model": config.judge_model,

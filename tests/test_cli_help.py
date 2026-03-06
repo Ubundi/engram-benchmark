@@ -15,3 +15,4 @@ def test_cli_help_exits_zero() -> None:
     )
     assert proc.returncode == 0
     assert "--agent" in proc.stdout
+    assert "--answer-model" in proc.stdout

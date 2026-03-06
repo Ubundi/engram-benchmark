@@ -15,6 +15,7 @@ from benchmark.run import _resolve_settle_seconds, _validate_condition
 
 def test_run_config_has_openclaw_timeout() -> None:
     cfg = RunConfig(agent="openclaw")
+    assert cfg.answer_model is None
     assert cfg.openclaw_timeout == 120
     assert cfg.agent_id is None
     assert cfg.condition is None

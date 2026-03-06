@@ -136,6 +136,7 @@ def _check_run_metadata(run_dir: Path, result: ValidationResult) -> None:
     required = [
         "benchmark_release",
         "protocol_version",
+        "answer_model",
         "run_id",
         "timestamp_utc",
         "config",
@@ -148,7 +149,7 @@ def _check_run_metadata(run_dir: Path, result: ValidationResult) -> None:
 
     config = meta.get("config")
     if isinstance(config, dict):
-        for key in ("agent", "split"):
+        for key in ("agent", "split", "answer_model"):
             if key not in config:
                 result.error(f"run_metadata.json: config missing required key '{key}'")
     elif config is not None:
@@ -176,10 +177,24 @@ def _check_run_metadata(run_dir: Path, result: ValidationResult) -> None:
                 f"run_metadata.json: config.split must be '{OFFICIAL_SPLIT}' "
                 "for official submissions"
             )
+        config_answer_model = config.get("answer_model")
+        if not isinstance(config_answer_model, str) or not config_answer_model.strip():
+            result.error(
+                "run_metadata.json: official submissions must record a non-empty "
+                "config.answer_model"
+            )
         if config.get("skip_seed") is True:
             result.error("run_metadata.json: official submissions may not use skip_seed")
         if config.get("dry_run") is True:
             result.error("run_metadata.json: official submissions may not use dry_run")
+
+    answer_model = meta.get("answer_model")
+    if not isinstance(answer_model, str) or not answer_model.strip():
+        result.error(
+            "run_metadata.json: official submissions must record a non-empty 'answer_model'"
+        )
+    elif isinstance(config, dict) and answer_model != config.get("answer_model"):
+        result.error("run_metadata.json: answer_model must match config.answer_model")
 
     if official_setting.get("split") != OFFICIAL_SPLIT:
         result.error(

@@ -7,6 +7,7 @@
   "required": [
     "benchmark_release",
     "protocol_version",
+    "answer_model",
     "run_id",
     "timestamp_utc",
     "config",
@@ -23,6 +24,13 @@
       "description": "Runtime protocol version identifier.",
       "type": "string",
       "minLength": 1
+    },
+    "answer_model": {
+      "description": "Evaluated model used to generate the agent's answers.",
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "null" }
+      ]
     },
     "official_setting": {
       "description": "Effective official-setting identifiers for this run.",
@@ -56,9 +64,15 @@
     "config": {
       "description": "Full RunConfig serialization.",
       "type": "object",
-      "required": ["agent", "split"],
+      "required": ["agent", "answer_model", "split"],
       "properties": {
         "agent": { "type": "string" },
+        "answer_model": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "null" }
+          ]
+        },
         "split": { "type": "string" },
         "data_path": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
         "output_dir": { "type": "string" },

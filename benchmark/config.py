@@ -18,6 +18,7 @@ OFFICIAL_JUDGE_TEMPERATURE = 0.3
 @dataclass
 class RunConfig:
     agent: str
+    answer_model: str | None = None
     split: str = "v3"
     data_path: str | None = None
     output_dir: str = "outputs"

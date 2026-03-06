@@ -43,6 +43,7 @@ Official benchmark artifacts for the current public release:
 Engram v3.0 has a frozen official public setting for benchmark-comparable runs:
 
 - Split: `v3`
+- Evaluated answer model: must be disclosed and recorded for every run
 - Judge model: `gpt-4.1-mini`
 - Judge passes: `3`
 - Judge temperature: `0.3`
@@ -171,6 +172,8 @@ After installing OpenClaw, the first run opens an interactive TUI where the agen
 | Enable hooks? | **boot-md, session-memory** |
 | How do you want to hatch? | **Hatch in TUI** |
 
+For the canonical OpenClaw reference track used in this repo, keep this answer model fixed across compared conditions and record it in the benchmark run with `--answer-model anthropic/claude-sonnet-4-6`.
+
 Once the TUI opens and the agent says "Who am I?", send these messages in order:
 
 **Message 1 — Identity:**
@@ -231,6 +234,7 @@ If you get disconnected, reconnect with `tmux attach -t benchmark`.
 JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
   --agent openclaw \
   --agent-id main \
+  --answer-model anthropic/claude-sonnet-4-6 \
   --condition baseline \
   --output-dir outputs/baseline
 ```
@@ -241,6 +245,7 @@ JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
 JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
   --agent openclaw \
   --agent-id main \
+  --answer-model anthropic/claude-sonnet-4-6 \
   --condition cortex \
   --output-dir outputs/cortex
 ```
@@ -261,6 +266,7 @@ The `JUDGE_API_KEY` is an OpenAI API key used by the LLM judge (defaults to `gpt
 |------|---------|-------------|
 | `--condition NAME` | — | Condition (baseline/cortex/clawvault). Sets settle defaults and enables cortex features |
 | `--agent-id ID` | — | OpenClaw agent ID (passed to `openclaw agent --agent`) |
+| `--answer-model MODEL` | — | Evaluated model used to generate answers; keep fixed across controlled comparisons |
 | `--settle-seconds N` | auto | Wait between seed and probe (cortex=180s, baseline/clawvault=10s, other=120s) |
 | `--judge-passes N` | 3 | LLM judge passes per response (scores averaged) |
 | `--judge-concurrency N` | 4 | Parallel judge workers |
@@ -319,6 +325,7 @@ Key findings:
 - Memory value **compounds across runs**: a second seeding pass raised overall score from 1.81 to 1.95
 
 Future benchmark reports should include multiple systems or conditions under the same pinned settings. See [docs/leaderboard.md](docs/leaderboard.md) for the submission and governance policy.
+If the evaluated answer model changes, treat that as a separate row or track rather than a controlled delta.
 
 ---
 
@@ -330,7 +337,7 @@ Each run produces `outputs/<run_id>/` containing:
 |------|----------|
 | `predictions.jsonl` | Per-task agent responses |
 | `metrics.json` | Aggregate and per-category scores |
-| `run_metadata.json` | Full run configuration, git commit, provenance |
+| `run_metadata.json` | Full run configuration, answer model, git commit, provenance |
 | `seed_turns.jsonl` | Seeded conversation turns with latency |
 | `probes.jsonl` | Probe session transcripts with latency |
 | `judgments.jsonl` | Per-response judge scores, rationale, and pass scores |

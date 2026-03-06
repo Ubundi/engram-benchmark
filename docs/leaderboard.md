@@ -14,6 +14,7 @@ A submission is eligible only if it includes:
 - Protocol version: `engram-runtime-v1`
 - Full run artifacts (`predictions.jsonl`, `metrics.json`, `run_metadata.json`, phase artifacts)
 - Agent version and configuration
+- Answer model
 - Reproducible command sequence
 - Dataset version: Engram v3
 - Official scoring settings as defined in [benchmark_release_v3.md](benchmark_release_v3.md)
@@ -38,3 +39,4 @@ A submission is eligible only if it includes:
 - Maintainers may request reruns with pinned settings for verification.
 - Any corrected or superseded result must preserve historical traceability.
 - Submissions must disclose settle seconds, judge model, and number of judge passes used.
+- Submissions must disclose answer model, and mixed-model runs must not be presented as a single controlled condition.

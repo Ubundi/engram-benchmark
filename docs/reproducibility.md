@@ -15,6 +15,7 @@ pip install -e ".[dev]"
 ## Determinism controls
 
 - Use the frozen official split (`v3`) for benchmark-comparable runs.
+- Record `--answer-model` for every run and keep it fixed across compared conditions.
 - Keep `--judge-model`, `--judge-passes`, and `--judge-temperature` unchanged across conditions.
 - Keep `--settle-seconds` and `--openclaw-timeout` consistent across conditions.
 - Use separate agent IDs for each condition.
@@ -24,6 +25,7 @@ pip install -e ".[dev]"
 Runs reported as official Engram v3.0 results should use:
 
 - `--split v3`
+- disclose and record `--answer-model <provider/model>`
 - `--judge-model gpt-4.1-mini`
 - `--judge-passes 3`
 - effective judge temperature `0.3`
@@ -56,7 +58,7 @@ These commands use the official condition-aware settle defaults. Archive both ou
 ## Verification checklist
 
 - `run_metadata.json` exists and includes agent ID and full config.
-- `run_metadata.json` includes `benchmark_release`, `protocol_version`, and `official_setting`.
+- `run_metadata.json` includes `benchmark_release`, `protocol_version`, `answer_model`, and `official_setting`.
 - `metrics.json` exists and includes `mean_score` and per-category fields.
 - `seed_turns.jsonl`, `probes.jsonl`, and `judgments.jsonl` exist for each run.
 - No probe or judge errors beyond tolerated thresholds for your org.
@@ -68,6 +70,7 @@ When sharing results, include:
 - Run IDs and commit SHA
 - Benchmark release and protocol version
 - Agent version and configuration
+- Answer model
 - Judge model and number of passes
 - Dataset version (Engram v3)
 - Settle seconds used

@@ -175,7 +175,7 @@ Writes all artifacts to `{output_dir}/{run_id}/`:
 |------|-------------|---------|
 | `predictions.jsonl` | Always | Agent responses with task_id linkage |
 | `metrics.json` | Always | Aggregate scores |
-| `run_metadata.json` | Always | Full config, counts, timestamp |
+| `run_metadata.json` | Always | Full config, answer model, counts, timestamp |
 | `seed_turns.jsonl` | If seeding ran | Per-task seed results |
 | `probes.jsonl` | If probing ran | Question-answer pairs |
 | `judgments.jsonl` | If judging ran | Per-task scores with rationale |

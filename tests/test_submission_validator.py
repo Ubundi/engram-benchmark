@@ -40,6 +40,7 @@ def _valid_dir():
         {
             "benchmark_release": BENCHMARK_RELEASE,
             "protocol_version": PROTOCOL_VERSION,
+            "answer_model": "anthropic/claude-sonnet-4-6",
             "official_setting": {
                 "split": "v3",
                 "judge_model": "gpt-4.1-mini",
@@ -48,7 +49,13 @@ def _valid_dir():
             },
             "run_id": "20260304T093015Z",
             "timestamp_utc": "2026-03-04T09:30:15Z",
-            "config": {"agent": "test", "split": "v3", "skip_seed": False, "dry_run": False},
+            "config": {
+                "agent": "test",
+                "answer_model": "anthropic/claude-sonnet-4-6",
+                "split": "v3",
+                "skip_seed": False,
+                "dry_run": False,
+            },
             "task_count": 2,
             "prediction_count": 2,
         },
@@ -114,6 +121,7 @@ class TestSubmissionValidator:
             {
                 "benchmark_release": BENCHMARK_RELEASE,
                 "protocol_version": PROTOCOL_VERSION,
+                "answer_model": "anthropic/claude-sonnet-4-6",
                 "official_setting": {
                     "split": "v3",
                     "judge_model": "gpt-4.1-mini",
@@ -122,7 +130,13 @@ class TestSubmissionValidator:
                 },
                 "run_id": "test",
                 "timestamp_utc": "2026-03-04T00:00:00Z",
-                "config": {"agent": "test", "split": "v3", "skip_seed": False, "dry_run": False},
+                "config": {
+                    "agent": "test",
+                    "answer_model": "anthropic/claude-sonnet-4-6",
+                    "split": "v3",
+                    "skip_seed": False,
+                    "dry_run": False,
+                },
                 "task_count": 2,
                 "prediction_count": 99,
             },
@@ -138,7 +152,11 @@ class TestSubmissionValidator:
             {
                 "run_id": "20260304T093015Z",
                 "timestamp_utc": "2026-03-04T09:30:15Z",
-                "config": {"agent": "test", "split": "v3"},
+                "config": {
+                    "agent": "test",
+                    "answer_model": "anthropic/claude-sonnet-4-6",
+                    "split": "v3",
+                },
                 "task_count": 2,
                 "prediction_count": 2,
             },
@@ -154,6 +172,7 @@ class TestSubmissionValidator:
             {
                 "benchmark_release": BENCHMARK_RELEASE,
                 "protocol_version": PROTOCOL_VERSION,
+                "answer_model": "anthropic/claude-sonnet-4-6",
                 "official_setting": {
                     "split": "v3",
                     "judge_model": "gpt-4.1",
@@ -162,7 +181,13 @@ class TestSubmissionValidator:
                 },
                 "run_id": "20260304T093015Z",
                 "timestamp_utc": "2026-03-04T09:30:15Z",
-                "config": {"agent": "test", "split": "v3", "skip_seed": False, "dry_run": False},
+                "config": {
+                    "agent": "test",
+                    "answer_model": "anthropic/claude-sonnet-4-6",
+                    "split": "v3",
+                    "skip_seed": False,
+                    "dry_run": False,
+                },
                 "task_count": 2,
                 "prediction_count": 2,
             },
@@ -170,6 +195,68 @@ class TestSubmissionValidator:
         result = validate(d)
         assert not result.passed
         assert any("official_setting.judge_model" in e for e in result.errors)
+
+    def test_missing_answer_model_fails(self):
+        d = _valid_dir()
+        _write(
+            d / "run_metadata.json",
+            {
+                "benchmark_release": BENCHMARK_RELEASE,
+                "protocol_version": PROTOCOL_VERSION,
+                "answer_model": None,
+                "official_setting": {
+                    "split": "v3",
+                    "judge_model": "gpt-4.1-mini",
+                    "judge_passes": 3,
+                    "judge_temperature": 0.3,
+                },
+                "run_id": "20260304T093015Z",
+                "timestamp_utc": "2026-03-04T09:30:15Z",
+                "config": {
+                    "agent": "test",
+                    "answer_model": None,
+                    "split": "v3",
+                    "skip_seed": False,
+                    "dry_run": False,
+                },
+                "task_count": 2,
+                "prediction_count": 2,
+            },
+        )
+        result = validate(d)
+        assert not result.passed
+        assert any("answer_model" in e for e in result.errors)
+
+    def test_mismatched_answer_model_fails(self):
+        d = _valid_dir()
+        _write(
+            d / "run_metadata.json",
+            {
+                "benchmark_release": BENCHMARK_RELEASE,
+                "protocol_version": PROTOCOL_VERSION,
+                "answer_model": "anthropic/claude-opus-4-6",
+                "official_setting": {
+                    "split": "v3",
+                    "judge_model": "gpt-4.1-mini",
+                    "judge_passes": 3,
+                    "judge_temperature": 0.3,
+                },
+                "run_id": "20260304T093015Z",
+                "timestamp_utc": "2026-03-04T09:30:15Z",
+                "config": {
+                    "agent": "test",
+                    "answer_model": "anthropic/claude-sonnet-4-6",
+                    "split": "v3",
+                    "skip_seed": False,
+                    "dry_run": False,
+                },
+                "task_count": 2,
+                "prediction_count": 2,
+            },
+        )
+        result = validate(d)
+        assert not result.passed
+        assert any("must match config.answer_model" in e for e in result.errors)
 
     def test_missing_phase_artifacts_are_warnings(self):
         d = _valid_dir()

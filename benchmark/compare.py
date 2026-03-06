@@ -110,11 +110,25 @@ def _write_comparison_md(
     push(f"| Setting | {cond_a} | {cond_b} |")
     push("|---------|---------|---------|")
     push(f"| Agent ID | {cfg_a.get('agent_id', '?')} | {cfg_b.get('agent_id', '?')} |")
+    push(
+        f"| Answer model | "
+        f"{meta_a.get('answer_model') or cfg_a.get('answer_model', '?')} | "
+        f"{meta_b.get('answer_model') or cfg_b.get('answer_model', '?')} |"
+    )
     push(f"| Judge model | {cfg_a.get('judge_model', '?')} | {cfg_b.get('judge_model', '?')} |")
     push(f"| Judge passes | {cfg_a.get('judge_passes', '?')} | {cfg_b.get('judge_passes', '?')} |")
     push(f"| Task count | {meta_a.get('task_count', '?')} | {meta_b.get('task_count', '?')} |")
     push(f"| Git commit | {meta_a.get('git_commit', '?')} | {meta_b.get('git_commit', '?')} |")
     push("")
+
+    answer_model_a = meta_a.get("answer_model") or cfg_a.get("answer_model")
+    answer_model_b = meta_b.get("answer_model") or cfg_b.get("answer_model")
+    if answer_model_a != answer_model_b:
+        push(
+            "Mixed answer models detected. Treat this as a cross-system comparison, "
+            "not a controlled within-model benchmark delta."
+        )
+        push("")
 
     # Overall results
     push("## Overall Results")

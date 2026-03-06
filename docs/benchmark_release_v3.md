@@ -60,6 +60,7 @@ Official runs must record the following in `run_metadata.json`:
 
 - `benchmark_release`
 - `protocol_version`
+- `answer_model`
 - `official_setting`
 - `run_id`
 - `timestamp_utc`
@@ -79,6 +80,7 @@ When publishing results for Engram v3.0, include:
 - protocol version
 - dataset split
 - condition
+- answer model
 - judge model
 - judge passes
 - judge temperature
@@ -111,6 +113,7 @@ JUDGE_API_KEY="<key>" python3 -m benchmark.run \
 
 The following are allowed for internal research, but should not be presented as official Engram v3.0 submissions without explicit disclosure:
 
+- alternate answer models under the same row label
 - alternate judge models
 - alternate judge pass counts
 - alternate temperatures

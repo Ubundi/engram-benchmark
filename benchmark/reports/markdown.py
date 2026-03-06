@@ -78,6 +78,7 @@ def write_markdown_report(
     push(f"| Benchmark release | {run_metadata.get('benchmark_release', '?')} |")
     push(f"| Protocol version | {run_metadata.get('protocol_version', '?')} |")
     push(f"| Dataset split | {cfg.get('split', '?')} |")
+    push(f"| Answer model | {run_metadata.get('answer_model') or cfg.get('answer_model', '?')} |")
     push(f"| Judge model | {cfg.get('judge_model', '?')} |")
     push(f"| Judge passes | {cfg.get('judge_passes', '?')} |")
     judge_temp = official.get("judge_temperature", cfg.get("judge_temperature", "auto"))
