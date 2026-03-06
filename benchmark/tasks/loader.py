@@ -58,7 +58,6 @@ def load_tasks(
         elif resolved_split != "test" and local_sample.exists():
             path = local_sample
         else:
-            # Fall back to HuggingFace
             path = _fetch_from_hf(test=(resolved_split == "test"))
 
     tasks = _read_tasks(path)
