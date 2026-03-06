@@ -127,43 +127,94 @@ openclaw gateway restart
 
 </details>
 
-#### Setup
+#### Hatching: standardize the agent identity
 
-Clone the repo on an EC2 instance where OpenClaw is already installed:
+After installing OpenClaw, the first run opens an interactive TUI where the agent asks you to define its identity. To ensure every benchmark instance starts from the same baseline, use these answers:
+
+| Prompt | Answer |
+|--------|--------|
+| Onboarding mode | **QuickStart** |
+| Model | **anthropic/claude-sonnet-4-6** |
+| Channel | **Skip for now** |
+| Configure skills? | **Yes** (skip all API key prompts) |
+| Enable hooks? | **boot-md, session-memory** |
+| How do you want to hatch? | **Hatch in TUI** |
+
+Once the TUI opens and the agent says "Who am I?", send these messages in order:
+
+**Message 1 — Identity:**
+> Your name is Benchmark. You are a memory evaluation agent. Your emoji is 📊. Your vibe is neutral and precise — no personality flourishes, just clear and direct responses. Call me Operator.
+
+**Message 2 — Purpose:**
+> You will be used to benchmark long-term memory recall. Conversations will be seeded into you, and then you'll be asked questions about them in a fresh session. Answer questions directly from what you remember. If you don't remember, say so honestly. Do not guess or hallucinate.
+
+**Message 3 — Finalize:**
+> Update IDENTITY.md and USER.md now. Delete BOOTSTRAP.md when done. Don't modify SOUL.md.
+
+Wait for the agent to confirm it has written the files, then exit the TUI (`Ctrl+C`).
+
+<details>
+<summary>Alternative: copy template files directly (skips TUI hatching)</summary>
+
+If you prefer to skip the interactive hatching entirely, copy the benchmark workspace templates into the OpenClaw workspace:
 
 ```bash
+cp engram-benchmark/workspace-templates/IDENTITY.md ~/.openclaw/workspace/IDENTITY.md
+cp engram-benchmark/workspace-templates/USER.md ~/.openclaw/workspace/USER.md
+rm -f ~/.openclaw/workspace/BOOTSTRAP.md
+```
+
+</details>
+
+#### Step 1: Install dependencies
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env
 git clone https://github.com/Ubundi/engram-benchmark.git && cd engram-benchmark
 uv venv && source .venv/bin/activate
 uv pip install -e ".[dev]"
 ```
 
-Dry-run first to confirm the setup:
+#### Step 2: Dry run
+
+Confirm everything is wired up before starting a real run:
 
 ```bash
 python3 -m benchmark.run --agent local_stub --dry-run --max-tasks 3
 ```
 
-Live run against the local OpenClaw agent:
+#### Step 3: Start a tmux session
+
+Benchmark runs take hours. Always run inside tmux so a disconnected SSH session doesn't kill the process:
 
 ```bash
-JUDGE_API_KEY="<key>" python3 -m benchmark.run \
+tmux new -s benchmark
+```
+
+If you get disconnected, reconnect with `tmux attach -t benchmark`.
+
+#### Step 4: Run baseline (no memory augmentation)
+
+```bash
+JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
   --agent openclaw \
-  --agent-id <your-agent-id> \
+  --agent-id main \
   --condition baseline \
   --output-dir outputs/baseline
 ```
 
-To compare conditions, run again with a different `--condition` and `--output-dir`:
+#### Step 5: Run with memory augmentation
 
 ```bash
-JUDGE_API_KEY="<key>" python3 -m benchmark.run \
+JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
   --agent openclaw \
-  --agent-id <your-agent-id> \
+  --agent-id main \
   --condition cortex \
   --output-dir outputs/cortex
 ```
 
-After both runs, compare results offline:
+#### Step 6: Compare results
 
 ```bash
 python3 -m benchmark.run \
@@ -171,7 +222,7 @@ python3 -m benchmark.run \
   --compare outputs/baseline/<run-id> outputs/cortex/<run-id>
 ```
 
-Use `tmux` for long-running sessions — see [docs/integration_guide.md](docs/integration_guide.md) for details.
+The `JUDGE_API_KEY` is an OpenAI API key used by the LLM judge (defaults to `gpt-4.1-mini`). Run IDs are printed at the start of each run and visible as directory names under `outputs/`.
 
 **Useful flags:**
 
