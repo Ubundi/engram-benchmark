@@ -96,6 +96,39 @@ See [docs/integration_guide.md](docs/integration_guide.md) for the HTTP server c
 
 ### 4. Run on EC2 with OpenClaw
 
+#### Prerequisite: enable systemd user services (fresh instances only)
+
+On a fresh Ubuntu EC2 instance, the `systemd --user` daemon is not started by default. The OpenClaw installer runs as a user-level systemd service, and its final health check will crash if the daemon isn't initialized — even though the binaries installed correctly.
+
+**Before running the OpenClaw installer**, run:
+
+```bash
+sudo loginctl enable-linger $USER
+```
+
+Then **disconnect and reconnect** your SSH session so PAM generates the correct D-Bus environment variables. After reconnecting, run the OpenClaw installer as normal.
+
+<details>
+<summary>Already installed and it crashed?</summary>
+
+If the installer failed with a `systemctl is-enabled unavailable` error, you don't need to wipe the server:
+
+```bash
+# Add OpenClaw to PATH
+export PATH="/home/ubuntu/.npm-global/bin:$PATH"
+
+# Repair the missing service files
+openclaw doctor --repair
+
+# Reload and start the gateway
+systemctl --user daemon-reload
+openclaw gateway restart
+```
+
+</details>
+
+#### Setup
+
 Clone the repo on an EC2 instance where OpenClaw is already installed:
 
 ```bash
