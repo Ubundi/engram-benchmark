@@ -1,9 +1,13 @@
-# Engram — Agent Long-Term Memory Benchmark
+<p align="center">
+  <img src="docs/assets/Engram Banner.png" alt="Engram — Measuring what AI agents remember" width="100%">
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![CI](https://github.com/Ubundi/cortex-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/Ubundi/cortex-benchmark/actions/workflows/ci.yml)
-[![Dataset on HF](https://img.shields.io/badge/%F0%9F%A4%97-Dataset-yellow.svg)](https://huggingface.co/datasets/matthewschramm/engram-v3)
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.10%2B-blue.svg" alt="Python 3.10+"></a>
+  <a href="https://github.com/Ubundi/cortex-benchmark/actions/workflows/ci.yml"><img src="https://github.com/Ubundi/cortex-benchmark/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://huggingface.co/datasets/matthewschramm/engram-v3"><img src="https://img.shields.io/badge/%F0%9F%A4%97-Dataset-yellow.svg" alt="Dataset on HF"></a>
+</p>
 
 > **Finding:** Without memory augmentation, agents abstain on 64% of long-term recall probes and answer correctly on only 4%. With memory augmentation, correct recall reaches 48% and abstention drops to 12%.
 
@@ -265,8 +269,8 @@ MIT
   <img src="docs/assets/ubundi_logo.jpeg" alt="Ubundi" height="36">
 </a>
 
-Engram is an open-source project by [Ubundi](https://ubundi.com) — a South African venture studio shaping human-centred AI. Based in Cape Town, Ubundi builds at the intersection of AI capability and African context, developing tools that ensure the benefits of AI reach their continent first.
+Engram is an open-source project by [Ubundi](https://ubundi.com) — a South African venture studio shaping human-centred AI. Based in Cape Town, Ubundi builds at the intersection of AI capability and African context.
 
-Engram was built as part of the infrastructure behind [TooToo](https://ubundi.com), Ubundi's personal identity layer for language models — where robust long-term memory recall is foundational to delivering contextually relevant, grounded responses.
+Engram grew out of a need to rigorously measure what memory systems actually retain. Existing benchmarks test in-context recall; Engram tests what survives after the context window is gone. The result: a reproducible, runtime-first evaluation that exposes the gap between "the agent saw it" and "the agent remembers it."
 
-→ [ubundi.com](https://ubundi.com)
+> [ubundi.com](https://ubundi.com)
