@@ -37,8 +37,14 @@ class RunConfig:
     flush_sessions: bool = False
     judge_concurrency: int = 4
 
+    # Fields that must never appear in serialized run metadata.
+    _REDACTED_FIELDS = frozenset({"judge_api_key"})
+
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        d = asdict(self)
+        for key in self._REDACTED_FIELDS:
+            d.pop(key, None)
+        return d
 
 
 def resolve_judge_temperature(config: RunConfig) -> float:

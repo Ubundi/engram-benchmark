@@ -15,8 +15,6 @@ Use at least three full runs per main condition. Five is preferred if runtime bu
 | `baseline` | 3 | 5 | Pending |
 | `clawvault` | 3 | 5 | Pending |
 | `cortex` | 3 | 5 | Pending |
-| External runtime, memory off | 3 | 5 | Pending |
-| External runtime, memory on | 3 | 5 | Pending |
 
 If a condition is dropped from the main table, remove it here rather than leaving an incomplete row in the final paper.
 
@@ -54,14 +52,6 @@ outputs/
     run-01/
     run-02/
     run-03/
-  http-no-memory/
-    run-01/
-    run-02/
-    run-03/
-  http-memory/
-    run-01/
-    run-02/
-    run-03/
 ```
 
 ## Per-Run Log Template
@@ -92,22 +82,6 @@ Fill one row per completed run.
 | 2 | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 | 3 | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 
-### External runtime, memory off
-
-| Run | Run directory | Runtime family | Agent version | Commit SHA | Task count | Judge model | Judge passes | Settle seconds | Mean score | Grounded rate | Hallucination rate | Abstention rate | Error count | Notes |
-|---|---|---|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
-| 2 | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
-| 3 | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
-
-### External runtime, memory on
-
-| Run | Run directory | Runtime family | Agent version | Commit SHA | Task count | Judge model | Judge passes | Settle seconds | Mean score | Grounded rate | Hallucination rate | Abstention rate | Error count | Notes |
-|---|---|---|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
-| 2 | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
-| 3 | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
-
 ## Aggregate Summary Template
 
 Fill this only after the per-run tables are complete.
@@ -117,8 +91,6 @@ Fill this only after the per-run tables are complete.
 | `baseline` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 | `clawvault` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 | `cortex` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
-| External runtime, memory off | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
-| External runtime, memory on | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 
 ## Per-Category Variance Template
 
@@ -130,8 +102,6 @@ Use this for the hardest or most paper-salient categories first.
 | `baseline` | `multi-session` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 | `cortex` | `temporal-reasoning` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 | `cortex` | `multi-session` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
-| External runtime, memory off | `temporal-reasoning` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
-| External runtime, memory on | `temporal-reasoning` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 
 ## Paper Table Template
 
@@ -142,8 +112,6 @@ Use this as the paper-facing compact version once the aggregate summary is compl
 | `baseline` | OpenClaw | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 | `clawvault` | OpenClaw | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 | `cortex` | OpenClaw | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
-| External runtime, memory off | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
-| External runtime, memory on | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 
 ## Methods Text Template
 
