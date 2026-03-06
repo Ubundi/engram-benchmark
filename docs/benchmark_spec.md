@@ -2,12 +2,13 @@
 
 ## Objective
 
-Measure memory-aware agent behavior in repeatable runtime conditions.
+Measure long-term memory behavior in AI agents under repeatable runtime conditions.
 
 Primary focus:
 - Can the agent recall grounded project details from prior sessions?
-- Can the agent answer rationale and cross-session questions with reduced abstention?
-- What quality profile is observed under baseline vs memory-augmented conditions?
+- Can the agent preserve rationale, evolution, and cross-session synthesis rather than only isolated facts?
+- How does a system trade off grounded recall, abstention, and hallucination under a fixed protocol?
+- Can different agent architectures be compared fairly under the same runtime conditions?
 
 ## Benchmark protocol
 
@@ -16,6 +17,8 @@ Engram uses a single runtime-oriented protocol for evaluating agent memory:
 - Input: canonical task objects (`id`, `input`, `reference_answer`) from the Engram v3 dataset.
 - Phases: seed -> settle -> probe -> judge -> report.
 - Output: phase-level artifacts plus summary metrics.
+
+The benchmark is system-neutral: any agent that can be driven through a supported adapter can be evaluated under the same task and scoring procedure.
 
 ## Canonical task model
 
@@ -36,6 +39,7 @@ Canonical internal fields:
 
 ## Non-goals (current release)
 
+- Claiming to exhaustively cover every memory failure mode in deployed agents.
 - Public leaderboard automation.
 - Built-in comparison report generation across conditions.
 - Full production adapter implementations for `codex` and `openai`.

@@ -9,15 +9,34 @@
   <a href="https://huggingface.co/datasets/matthewschramm/engram-v3"><img src="https://img.shields.io/badge/%F0%9F%A4%97-Dataset-yellow.svg" alt="Dataset on HF"></a>
 </p>
 
-> **Finding:** Without memory augmentation, agents abstain on 64% of long-term recall probes and answer correctly on only 4%. With memory augmentation, correct recall reaches 48% and abstention drops to 12%.
-
-[Dataset](https://huggingface.co/datasets/matthewschramm/engram-v3) &nbsp;·&nbsp; [Results](docs/FINDINGS.md) &nbsp;·&nbsp; [Benchmark Spec](docs/benchmark_spec.md) &nbsp;·&nbsp; [Evaluation Protocol](docs/evaluation_protocol.md) &nbsp;·&nbsp; [Integration Guide](docs/integration_guide.md)
+[Dataset](https://huggingface.co/datasets/matthewschramm/engram-v3) &nbsp;·&nbsp; [Benchmark Spec](docs/benchmark_spec.md) &nbsp;·&nbsp; [Evaluation Protocol](docs/evaluation_protocol.md) &nbsp;·&nbsp; [Dataset Card](docs/dataset_card.md) &nbsp;·&nbsp; [Leaderboard Policy](docs/leaderboard.md) &nbsp;·&nbsp; [Integration Guide](docs/integration_guide.md)
 
 ---
 
-**Engram** is a runtime-first benchmark for evaluating long-term memory recall in AI agents. It tests whether agents can retrieve grounded, specific knowledge from prior sessions — not just recent in-context messages.
+**Engram** is a runtime benchmark for evaluating long-term memory in AI agents. It measures whether an agent can recover grounded, specific knowledge from prior sessions after the original context window is gone.
 
-Unlike static QA benchmarks, Engram operates inside the agent runtime: it seeds real multi-turn conversation histories into the agent, waits for memory processing to settle, then probes recall in a fresh session with no in-context history. Whatever memory architecture the agent has is what gets measured.
+Unlike static QA or retrieval-only tests, Engram runs inside the agent runtime itself: it seeds multi-turn conversation histories, waits for memory processing to settle, then probes recall in a fresh session with no haystack in context. Whatever memory architecture the agent actually uses is what gets measured.
+
+Engram is intended to be benchmark-first and system-neutral. The benchmark defines the task format, runtime protocol, scoring rubric, and artifact requirements; systems such as OpenClaw, Cortex, or any third-party agent are evaluated against the same procedure.
+
+## What Engram Measures
+
+Engram is designed to answer three benchmark questions:
+
+- Can an agent retrieve grounded project details from prior sessions?
+- Can it preserve rationale, evolution, and cross-session synthesis rather than only isolated facts?
+- How does it trade off grounded recall, abstention, and hallucination under a fixed runtime protocol?
+
+Official benchmark artifacts for the current public release:
+
+| Artifact | Value |
+|----------|-------|
+| Benchmark release | Engram v3 |
+| Tasks | 498 |
+| Question types | 9 |
+| Primary metric | Mean judge score (0-3) |
+| Secondary metrics | Grounded rate, hallucination rate, abstention rate, per-category scores |
+| Official protocol | Seed -> Settle -> Probe -> Judge |
 
 ---
 
@@ -27,7 +46,7 @@ Unlike static QA benchmarks, Engram operates inside the agent runtime: it seeds 
   <img src="docs/assets/task-categories.png" alt="Engram task category examples" width="100%">
 </p>
 
-Engram v3 contains **498 tasks** spanning 9 question types, targeting the specific failure modes where compaction-based memory systems break down:
+Engram v3 contains **498 tasks** spanning 9 question types, targeting failure modes that commonly stress long-term agent memory systems:
 
 | Category | Count | What it tests |
 |----------|------:|---------------|
@@ -94,7 +113,7 @@ Engram seeds memory sessions into the agent, waits for memory processing to sett
 
 See [docs/integration_guide.md](docs/integration_guide.md) for the HTTP server contract, the OpenClaw CLI adapter, and a custom Python adapter option.
 
-### 4. Run on EC2 with OpenClaw
+### 4. Reference runtime: OpenClaw on EC2
 
 #### Prerequisite: enable systemd user services (fresh instances only)
 
@@ -194,7 +213,7 @@ tmux new -s benchmark
 
 If you get disconnected, reconnect with `tmux attach -t benchmark`.
 
-#### Step 4: Run baseline (no memory augmentation)
+#### Step 4: Run a reference baseline
 
 ```bash
 JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
@@ -204,7 +223,7 @@ JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
   --output-dir outputs/baseline
 ```
 
-#### Step 5: Run with memory augmentation
+#### Step 5: Run an additional condition
 
 ```bash
 JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
@@ -268,9 +287,11 @@ See [docs/evaluation_protocol.md](docs/evaluation_protocol.md) for full protocol
 
 ---
 
-## Results
+## Reference Results
 
-Reference run results on a live OpenClaw agent (Mar 4, 2026). Scores are on a 0–3 scale.
+The table below is a reference example showing how Engram reports results for one evaluated runtime family. It is not the definition of the benchmark, and it should not be read as the only intended use of Engram.
+
+Reference run results on a live OpenClaw agent, reported on March 4, 2026. Scores are on a 0-3 scale.
 
 | Condition | Overall | Rationale | Synthesis | Evolution | Temporal | Grounded | Abstained |
 |-----------|--------:|----------:|----------:|----------:|---------:|---------:|----------:|
@@ -285,7 +306,7 @@ Key findings:
 - **Temporal reasoning** (+0.05) is the hardest category — semantic retrieval surfaces historical and current facts without reliable recency ranking
 - Memory value **compounds across runs**: a second seeding pass raised overall score from 1.81 to 1.95
 
-Full analysis and per-category breakdowns: [docs/FINDINGS.md](docs/FINDINGS.md)
+Future benchmark reports should include multiple systems or conditions under the same pinned settings. See [docs/leaderboard.md](docs/leaderboard.md) for the submission and governance policy.
 
 ---
 
@@ -352,6 +373,6 @@ MIT
 
 Engram is an open-source project by [Ubundi](https://ubundi.com) — a South African venture studio shaping human-centred AI. Based in Cape Town, Ubundi builds at the intersection of AI capability and African context.
 
-Engram grew out of a need to rigorously measure what memory systems actually retain. Existing benchmarks test in-context recall; Engram tests what survives after the context window is gone. The result: a reproducible, runtime-first evaluation that exposes the gap between "the agent saw it" and "the agent remembers it."
+Engram grew out of a need to rigorously measure what memory systems actually retain. Existing benchmarks often emphasize in-context recall; Engram is built to test what survives after the context window is gone. The result is a reproducible runtime evaluation intended for internal benchmarking, public comparison, and eventual community adoption.
 
 > [ubundi.com](https://ubundi.com)

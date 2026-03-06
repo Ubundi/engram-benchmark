@@ -1,10 +1,11 @@
 cff-version: 1.2.0
-title: Engram Benchmark
-message: If you use this benchmark scaffold, please cite it.
+title: Engram: A Runtime Benchmark for Agent Long-Term Memory
+message: If you use Engram in research, evaluation, or published results, please cite it.
 type: software
 authors:
-  - family-names: Team
-    given-names: Benchmark
+  - family-names: Ubundi
+    given-names: Team
 version: 0.1.0
 date-released: 2026-03-04
 license: MIT
+repository-code: https://github.com/Ubundi/engram-benchmark
