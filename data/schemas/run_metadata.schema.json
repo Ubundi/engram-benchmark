@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Ubundi/cortex-benchmark/schemas/run_metadata.schema.json",
+  "title": "RunMetadata",
+  "description": "Provenance and configuration for a benchmark run.",
+  "type": "object",
+  "required": [
+    "run_id",
+    "timestamp_utc",
+    "config",
+    "task_count",
+    "prediction_count"
+  ],
+  "properties": {
+    "run_id": {
+      "description": "Run identifier in YYYYMMDDTHHMMSSz format.",
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp_utc": {
+      "description": "ISO-8601 datetime with timezone.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "condition": {
+      "description": "Optional condition label (e.g., baseline, cortex).",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "null" }
+      ]
+    },
+    "config": {
+      "description": "Full RunConfig serialization.",
+      "type": "object",
+      "required": ["agent", "split"],
+      "properties": {
+        "agent": { "type": "string" },
+        "split": { "type": "string" },
+        "data_path": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "output_dir": { "type": "string" },
+        "max_tasks": { "oneOf": [{ "type": "integer" }, { "type": "null" }] },
+        "skip_seed": { "type": "boolean" },
+        "settle_seconds": { "type": "integer", "minimum": 0 },
+        "dry_run": { "type": "boolean" },
+        "judge_model": { "type": "string" },
+        "judge_base_url": { "type": "string" },
+        "judge_passes": { "type": "integer", "minimum": 1 },
+        "judge_temperature": { "oneOf": [{ "type": "number" }, { "type": "null" }] }
+      },
+      "additionalProperties": true
+    },
+    "task_count": {
+      "description": "Number of tasks loaded.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "prediction_count": {
+      "description": "Number of predictions generated.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "seed_count": {
+      "description": "Number of seed phase results (0 if --skip-seed).",
+      "type": "integer",
+      "minimum": 0
+    },
+    "judgment_count": {
+      "description": "Number of judgments produced (0 if dry run).",
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

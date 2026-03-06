@@ -175,9 +175,94 @@ config = RunConfig(agent="my_agent", split="test", dry_run=True)
 
 ---
 
+## Option C: OpenClaw CLI Agent
+
+Use this when running on an EC2 instance (or any server) with the OpenClaw CLI installed. This is the canonical setup for producing reference results.
+
+### Prerequisites
+
+- `openclaw` executable on `PATH` — verify with `openclaw --version`
+- An OpenClaw agent ID (optional if you have a default agent)
+
+### Run command
+
+```bash
+JUDGE_API_KEY="sk-..." python3 -m benchmark.run \
+  --agent openclaw \
+  --agent-id <your-agent-id> \
+  --condition baseline \
+  --output-dir outputs/baseline
+```
+
+### Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--agent-id ID` | _(none)_ | OpenClaw agent ID passed to `openclaw agent --agent` |
+| `--openclaw-timeout N` | `120` | Timeout in seconds per `openclaw agent` call |
+| `--condition NAME` | _(none)_ | Condition (baseline/cortex/clawvault). Enables condition-specific behavior |
+| `--flush-sessions` | off | Send `/new` after each seed session to trigger session-close memory hooks |
+| `--judge-concurrency N` | `4` | Parallel judge workers |
+| `--compare DIR_A DIR_B` | — | Compare two run directories offline (no agent needed) |
+
+### What the adapter does
+
+**Seed phase:** For each haystack session, the adapter sends every user turn to the OpenClaw agent via `openclaw agent --message <msg> --json --session-id <unique-id>`. Assistant turns are skipped — the agent generates its own responses. Each session gets a unique session ID so memory boundaries are preserved. With `--flush-sessions`, a `/new` command is sent after each session to trigger session-close memory hooks.
+
+**Cortex condition:** When `--condition cortex` is set:
+- **Preflight check** — sends `/memories` to the agent to verify the Cortex plugin is installed (checks for `cortex_search_memory` and `cortex_save_memory` tools). Aborts with a clear error if the plugin is missing.
+- **Seed date injection** — injects a narrative date context prefix into the first turn of each session, so temporal enrichment anchors `occurred_at` values correctly.
+- **Probe date annotation** — prepends a `[cortex-date: YYYY-MM-DD]` marker to every probe, so the recall handler passes the correct `reference_date` for temporal ordering.
+- **Settle default** — 180s instead of the usual 10s, to allow async Cortex ingest jobs (LLM extraction + embedding + graph build) to drain.
+
+**Probe phase:** The probe question is sent in a fresh session (new session ID) with no prior context. The adapter parses the JSON response using the same fallback chain as the V2 TypeScript runner: `result.payloads[].text` → `parsed.text` → `parsed.message` → `parsed.response` → raw stdout. Per-probe latency (in ms) is recorded in the output.
+
+### EC2 setup walkthrough
+
+```bash
+# 1. Clone and install
+git clone https://github.com/Ubundi/cortex-benchmark.git
+cd cortex-benchmark
+pip install -e ".[dev]"
+
+# 2. Authenticate with HuggingFace
+hf auth login
+
+# 3. Smoke test (no OpenClaw needed)
+python3 -m benchmark.run --agent local_stub --dry-run --max-tasks 3
+
+# 4. Verify OpenClaw is available
+openclaw --version
+
+# 5. Live baseline run (inside tmux)
+tmux new -s bench
+JUDGE_API_KEY="sk-..." python3 -m benchmark.run \
+  --agent openclaw \
+  --agent-id <id> \
+  --condition baseline \
+  --output-dir outputs/baseline
+
+# 6. Reset agent memory between conditions
+#    See v2/reset-agent-memory.sh for reference
+
+# 7. Memory-augmented run (cortex auto-settles for 180s)
+JUDGE_API_KEY="sk-..." python3 -m benchmark.run \
+  --agent openclaw \
+  --agent-id <id> \
+  --condition cortex \
+  --output-dir outputs/cortex
+
+# 8. Compare results offline
+python3 -m benchmark.run \
+  --agent local_stub \
+  --compare outputs/baseline/<run-id> outputs/cortex/<run-id>
+```
+
+---
+
 ## Running Long Benchmarks with tmux
 
-The full v3 split (504 tasks × 120s settle) takes approximately 30 minutes. Use tmux to keep the run alive across disconnections:
+The full v3 split takes approximately 30 minutes (498 tasks, settle time depends on condition). Use tmux to keep the run alive across disconnections:
 
 ```bash
 # Create a new session
@@ -225,11 +310,12 @@ Each run writes to `outputs/<run_id>/`:
 | File | Contents |
 |------|----------|
 | `predictions.jsonl` | Raw agent outputs per task |
-| `probes.jsonl` | Question + output pairs |
-| `seed_turns.jsonl` | Seed results per task |
-| `judgments.jsonl` | Per-task LLM judge scores (0–3) |
+| `probes.jsonl` | Question + output pairs with latency |
+| `seed_turns.jsonl` | Seed results per task with latency |
+| `judgments.jsonl` | Per-task judge scores (0–3), pass scores, rationale |
 | `metrics.json` | Aggregated metrics |
-| `run_metadata.json` | Run config and counts |
+| `run_metadata.json` | Run config, git commit, and counts |
+| `report.md` | Human-readable Markdown report with per-probe detail |
 
 ### Key metrics
 
@@ -251,7 +337,7 @@ Each run writes to `outputs/<run_id>/`:
 | `JUDGE_MODEL` | `gpt-4.1-mini` | Judge model name |
 | `JUDGE_BASE_URL` | `https://api.openai.com/v1` | OpenAI-compatible API base URL |
 | `HF_TOKEN` | _(huggingface-cli)_ | HuggingFace token for dataset access |
-| `OPENCLAW_TIMEOUT` | `120` | Timeout for external CLI calls |
+| `OPENCLAW_TIMEOUT` | `120` | Timeout in seconds for `openclaw agent` CLI calls |
 
 ---
 

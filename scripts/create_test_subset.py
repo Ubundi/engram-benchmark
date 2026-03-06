@@ -14,8 +14,8 @@ import random
 from collections import defaultdict
 from pathlib import Path
 
-FULL_PATH = Path("openclaw-memory-benchmark-v3.json")
-TEST_PATH = Path("openclaw-memory-benchmark-v3-test.json")
+FULL_PATH = Path("data/raw/engram-v3.json")
+TEST_PATH = Path("data/raw/engram-v3-test.json")
 TARGET = 50
 SEED = 42
 
@@ -94,7 +94,7 @@ def main():
     print("Type distribution:")
     for t, c in sorted(type_counts.items()):
         print(f"  {t}: {c}")
-    print(f"\nDifficulty distribution:")
+    print("\nDifficulty distribution:")
     for d, c in sorted(diff_counts.items()):
         print(f"  {d}: {c}")
 

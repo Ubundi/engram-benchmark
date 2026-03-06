@@ -5,10 +5,10 @@ This directory holds benchmark datasets, schemas, and staging notes.
 ## Layout
 
 - `splits/`: canonical JSONL task splits.
-  - `v3.jsonl` — 504-task Engram v3 dataset (generated from `raw/v3/`)
+  - `v3.jsonl` — 498-task Engram v3 dataset (generated from `raw/engram-v3.json`)
   - `*.sample.jsonl` — small CI-safe sample splits
 - `schemas/`: JSON schemas for tasks and predictions.
-- `raw/v3/`: source JSON (`engram-v3.json`). Regenerate the split with `make ingest-v3`.
+- `raw/`: source JSON (`engram-v3.json`, `engram-v3-test.json`).
 
 ## Canonical task fields
 

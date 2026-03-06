@@ -11,7 +11,7 @@ from typing import Any
 @dataclass
 class RunConfig:
     agent: str
-    split: str = "dev"
+    split: str = "v3"
     data_path: str | None = None
     output_dir: str = "outputs"
     config_path: str | None = None
@@ -24,6 +24,11 @@ class RunConfig:
     judge_api_key: str = ""
     judge_passes: int = 3
     judge_temperature: float | None = None
+    openclaw_timeout: int = 120
+    agent_id: str | None = None
+    condition: str | None = None
+    flush_sessions: bool = False
+    judge_concurrency: int = 4
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

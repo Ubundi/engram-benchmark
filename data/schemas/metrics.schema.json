@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Ubundi/cortex-benchmark/schemas/metrics.schema.json",
+  "title": "BenchmarkMetrics",
+  "description": "Aggregate metrics produced by a benchmark run.",
+  "type": "object",
+  "required": [
+    "qa.mean_score",
+    "qa.exact_match",
+    "qa.judged_count",
+    "qa.error_count",
+    "retrieval.hit_rate",
+    "retrieval.judged_count",
+    "abstain.rate"
+  ],
+  "properties": {
+    "qa.mean_score": {
+      "description": "Average judge score (0–3) across all judged predictions.",
+      "oneOf": [
+        { "type": "number", "minimum": 0, "maximum": 3 },
+        { "type": "null" }
+      ]
+    },
+    "qa.exact_match": {
+      "description": "Proportion of exact string matches (case-insensitive).",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "qa.judged_count": {
+      "description": "Number of predictions that received a judge score.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "qa.error_count": {
+      "description": "Number of predictions where the judge returned an error.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "retrieval.hit_rate": {
+      "description": "Proportion of predictions with judge score >= 2.0.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "retrieval.judged_count": {
+      "description": "Number of scored predictions used for hit_rate.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "abstain.rate": {
+      "description": "Proportion of predictions detected as abstention.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "patternProperties": {
+    "^qa\\.category\\..+\\.mean_score$": {
+      "description": "Per-category mean judge score.",
+      "oneOf": [
+        { "type": "number", "minimum": 0, "maximum": 3 },
+        { "type": "null" }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

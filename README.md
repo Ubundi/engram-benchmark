@@ -1,8 +1,13 @@
 # Engram — Agent Long-Term Memory Benchmark
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![CI](https://github.com/Ubundi/cortex-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/Ubundi/cortex-benchmark/actions/workflows/ci.yml)
+[![Dataset on HF](https://img.shields.io/badge/%F0%9F%A4%97-Dataset-yellow.svg)](https://huggingface.co/datasets/matthewschramm/engram-v3)
+
 > **Finding:** Without memory augmentation, agents abstain on 64% of long-term recall probes and answer correctly on only 4%. With memory augmentation, correct recall reaches 48% and abstention drops to 12%.
 
-🤗 [Dataset](https://huggingface.co/datasets/matthewschramm/engram-v3) &nbsp;·&nbsp; 📊 [Results](docs/FINDINGS.md) &nbsp;·&nbsp; 📋 [Benchmark Spec](docs/benchmark_spec.md) &nbsp;·&nbsp; 📄 [Evaluation Protocol](docs/evaluation_protocol.md) &nbsp;·&nbsp; 🔌 [Integration Guide](docs/integration_guide.md)
+[Dataset](https://huggingface.co/datasets/matthewschramm/engram-v3) &nbsp;·&nbsp; [Results](docs/FINDINGS.md) &nbsp;·&nbsp; [Benchmark Spec](docs/benchmark_spec.md) &nbsp;·&nbsp; [Evaluation Protocol](docs/evaluation_protocol.md) &nbsp;·&nbsp; [Integration Guide](docs/integration_guide.md)
 
 ---
 
@@ -18,18 +23,18 @@ Unlike static QA benchmarks, Engram operates inside the agent runtime: it seeds 
   <img src="docs/assets/task-categories.png" alt="Engram task category examples" width="100%">
 </p>
 
-Engram v3 contains **504 tasks** spanning 9 question types, targeting the specific failure modes where compaction-based memory systems break down:
+Engram v3 contains **498 tasks** spanning 9 question types, targeting the specific failure modes where compaction-based memory systems break down:
 
 | Category | Count | What it tests |
 |----------|------:|---------------|
-| `multi-session` | 80 | Facts requiring information from multiple separate conversations |
+| `multi-session` | 79 | Facts requiring information from multiple separate conversations |
 | `temporal-reasoning` | 78 | Ordering and recency — distinguishing current from historical facts |
-| `cross-agent-memory` | 72 | Knowledge shared or referenced across different agent instances |
-| `multi-hop-reasoning` | 69 | Connecting facts via intermediate entities across the session corpus |
+| `cross-agent-memory` | 71 | Knowledge shared or referenced across different agent instances |
+| `multi-hop-reasoning` | 68 | Connecting facts via intermediate entities across the session corpus |
 | `recurring-pattern` | 54 | Conventions and patterns established repeatedly across sessions |
 | `knowledge-update` | 53 | Tracking how facts evolved — decisions reversed or revised over time |
 | `single-session-user` | 45 | Direct recall of specifics stated by the user in a single session |
-| `single-session-assistant` | 35 | Recall of specifics stated by the assistant in a single session |
+| `single-session-assistant` | 32 | Recall of specifics stated by the assistant in a single session |
 | `fact-recall` | 18 | Direct retrieval of a single grounded specific fact |
 
 ---
@@ -45,7 +50,7 @@ path = fetch_engram_dataset()  # downloads and caches locally
 
 | Property | Value |
 |----------|-------|
-| Tasks | 504 |
+| Tasks | 498 |
 | Avg haystack sessions per task | 3.0 |
 | Avg haystack turns per task | 30.1 |
 | Question types | 9 |
@@ -86,17 +91,69 @@ JUDGE_API_KEY="<key>" python3 -m benchmark.run --agent http://localhost:8080
 
 Engram seeds memory sessions into the agent, waits for memory processing to settle, probes recall in a fresh session, and judges responses with an LLM.
 
-See [docs/integration_guide.md](docs/integration_guide.md) for the HTTP server contract, a minimal Python example, and a custom Python adapter option.
+See [docs/integration_guide.md](docs/integration_guide.md) for the HTTP server contract, the OpenClaw CLI adapter, and a custom Python adapter option.
+
+### 5. Run on EC2 with OpenClaw
+
+Clone the repo on an EC2 instance where OpenClaw is already installed:
+
+```bash
+git clone https://github.com/Ubundi/cortex-benchmark.git && cd cortex-benchmark
+pip install -e ".[dev]"
+hf auth login
+```
+
+Dry-run first to confirm the setup:
+
+```bash
+python3 -m benchmark.run --agent local_stub --dry-run --max-tasks 3
+```
+
+Live run against the local OpenClaw agent:
+
+```bash
+JUDGE_API_KEY="<key>" python3 -m benchmark.run \
+  --agent openclaw \
+  --agent-id <your-agent-id> \
+  --condition baseline \
+  --output-dir outputs/baseline
+```
+
+To compare conditions, run again with a different `--condition` and `--output-dir`:
+
+```bash
+JUDGE_API_KEY="<key>" python3 -m benchmark.run \
+  --agent openclaw \
+  --agent-id <your-agent-id> \
+  --condition cortex \
+  --output-dir outputs/cortex
+```
+
+After both runs, compare results offline:
+
+```bash
+python3 -m benchmark.run \
+  --agent local_stub \
+  --compare outputs/baseline/<run-id> outputs/cortex/<run-id>
+```
+
+Use `tmux` for long-running sessions — see [docs/integration_guide.md](docs/integration_guide.md) for details.
 
 **Useful flags:**
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--settle-seconds N` | 120 | Wait between seed and probe phases |
+| `--condition NAME` | — | Condition (baseline/cortex/clawvault). Sets settle defaults and enables cortex features |
+| `--agent-id ID` | — | OpenClaw agent ID (passed to `openclaw agent --agent`) |
+| `--settle-seconds N` | auto | Wait between seed and probe (cortex=180s, baseline/clawvault=10s, other=120s) |
 | `--judge-passes N` | 3 | LLM judge passes per response (scores averaged) |
+| `--judge-concurrency N` | 4 | Parallel judge workers |
+| `--flush-sessions` | — | Send `/new` after each seed session to trigger memory hooks |
 | `--skip-seed` | — | Skip seeding; probe a pre-seeded agent only |
 | `--max-tasks N` | — | Run a subset of N tasks |
 | `--judge-model` | `gpt-4.1-mini` | Judge model name |
+| `--openclaw-timeout N` | 120 | Timeout in seconds for `openclaw agent` CLI calls |
+| `--compare DIR_A DIR_B` | — | Compare two run directories offline (no agent needed) |
 
 ---
 
@@ -109,7 +166,7 @@ Seed  →  Settle  →  Probe  →  Judge
 ```
 
 1. **Seed** — Replay haystack sessions into the agent turn-by-turn via the agent runtime
-2. **Settle** — Wait for memory indexing and async processing to complete (default: 120s)
+2. **Settle** — Wait for memory indexing and async processing to complete (cortex: 180s, baseline: 10s)
 3. **Probe** — Ask evaluation questions in a fresh session with no haystack in context
 4. **Judge** — Score responses 0–3 against ground truth using a multi-pass LLM judge
 
@@ -155,10 +212,11 @@ Each run produces `outputs/<run_id>/` containing:
 |------|----------|
 | `predictions.jsonl` | Per-task agent responses |
 | `metrics.json` | Aggregate and per-category scores |
-| `run_metadata.json` | Full run configuration and provenance |
-| `seed_turns.jsonl` | Seeded conversation turns |
-| `probes.jsonl` | Probe session transcripts |
-| `judgments.jsonl` | Per-response judge scores and rationale |
+| `run_metadata.json` | Full run configuration, git commit, provenance |
+| `seed_turns.jsonl` | Seeded conversation turns with latency |
+| `probes.jsonl` | Probe session transcripts with latency |
+| `judgments.jsonl` | Per-response judge scores, rationale, and pass scores |
+| `report.md` | Human-readable Markdown report with full per-probe detail |
 
 ---
 
@@ -168,7 +226,7 @@ Each run produces `outputs/<run_id>/` containing:
 engram/
 ├── benchmark/           CLI, adapters, task loader, evaluators, writers
 │   ├── tasks/           Task loading, HuggingFace fetch, schema validation
-│   ├── adapters/        Agent adapters: local_stub, http, openai, codex
+│   ├── adapters/        Agent adapters: local_stub, http, openclaw, openai, codex
 │   ├── evaluators/      QA, retrieval, and abstention evaluators
 │   └── judge.py         Multi-pass LLM judge (0–3 scoring)
 ├── data/

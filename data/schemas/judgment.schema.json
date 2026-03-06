@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Ubundi/cortex-benchmark/schemas/judgment.schema.json",
+  "title": "Judgment",
+  "description": "A single judgment record from the LLM judge.",
+  "type": "object",
+  "required": ["task_id", "score"],
+  "oneOf": [
+    {
+      "description": "Successful judgment with averaged score.",
+      "properties": {
+        "task_id": { "type": "string", "minLength": 1 },
+        "score": { "type": "number", "minimum": 0, "maximum": 3 },
+        "scores": {
+          "description": "Individual pass scores.",
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0, "maximum": 3 },
+          "minItems": 1
+        },
+        "rationale": {
+          "description": "One-sentence explanation from first successful pass.",
+          "type": "string"
+        },
+        "pass_count": {
+          "description": "Number of successful judge passes.",
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": ["task_id", "score", "scores", "rationale", "pass_count"],
+      "additionalProperties": false
+    },
+    {
+      "description": "Failed judgment where all passes errored.",
+      "properties": {
+        "task_id": { "type": "string", "minLength": 1 },
+        "score": { "type": "null" },
+        "error": {
+          "description": "Error message describing the failure.",
+          "type": "string"
+        }
+      },
+      "required": ["task_id", "score", "error"],
+      "additionalProperties": false
+    }
+  ]
+}

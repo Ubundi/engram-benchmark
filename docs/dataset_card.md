@@ -2,9 +2,9 @@
 
 ## Dataset summary
 
-**Engram v3** (`data/splits/v3.jsonl`) is a 504-task benchmark dataset for evaluating agent memory recall behavior. It covers 8 question types: temporal reasoning, multi-session recall, knowledge updates, cross-agent memory, multi-hop reasoning, recurring patterns, and single-session recall.
+**Engram v3** (`data/splits/v3.jsonl`) is a 498-task benchmark dataset for evaluating agent memory recall behavior. It covers 9 question types: temporal reasoning, multi-session recall, knowledge updates, cross-agent memory, multi-hop reasoning, recurring patterns, single-session recall, and fact recall.
 
-Source JSON: `data/raw/v3/engram-v3.json`.
+Source JSON: `data/raw/engram-v3.json`. A 50-task test subset is available at `data/raw/engram-v3-test.json`.
 
 ## Provenance
 

@@ -1,5 +1,7 @@
 # Fix Validation Failures in v3 Benchmark
 
+> **RESOLVED** (2026-03-06): All fixes applied. 14 invalid roles fixed, 6 exact duplicates removed, 8 near-duplicates removed, 11 ungrounded answers fixed in-place, 5 ungroundable questions deleted. Final count: 498 questions, 10/10 validation checks pass. Fixed dataset published to HuggingFace.
+
 The generated `openclaw-memory-benchmark-v3.json` (517 questions after anonymization) has **3 failing validation checks** out of 10. This document describes each failure and how to fix it.
 
 **Target file:** `openclaw-memory-benchmark-v3.json`

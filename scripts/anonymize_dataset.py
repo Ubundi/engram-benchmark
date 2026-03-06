@@ -16,7 +16,7 @@ import re
 import sys
 from pathlib import Path
 
-BENCHMARK_PATH = Path("openclaw-memory-benchmark-v3.json")
+BENCHMARK_PATH = Path("data/raw/engram-v3.json")
 
 # ---------------------------------------------------------------------------
 # Replacement maps

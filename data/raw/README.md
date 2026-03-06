@@ -27,7 +27,7 @@ Unlike static QA benchmarks, Engram operates inside the agent runtime: it seeds 
 
 | Property | Value |
 |----------|-------|
-| Tasks | 504 |
+| Tasks | 498 |
 | Avg haystack sessions per task | 3.0 |
 | Avg haystack turns per task | 30.1 |
 | Question types | 9 |
@@ -39,14 +39,14 @@ Unlike static QA benchmarks, Engram operates inside the agent runtime: it seeds 
 
 | Category | Count | What it tests |
 |----------|------:|---------------|
-| `multi-session` | 80 | Facts requiring information from multiple separate conversations |
+| `multi-session` | 79 | Facts requiring information from multiple separate conversations |
 | `temporal-reasoning` | 78 | Ordering and recency — distinguishing current from historical facts |
-| `cross-agent-memory` | 72 | Knowledge shared or referenced across different agent instances |
-| `multi-hop-reasoning` | 69 | Connecting facts via intermediate entities across the session corpus |
+| `cross-agent-memory` | 71 | Knowledge shared or referenced across different agent instances |
+| `multi-hop-reasoning` | 68 | Connecting facts via intermediate entities across the session corpus |
 | `recurring-pattern` | 54 | Conventions and patterns established repeatedly across sessions |
 | `knowledge-update` | 53 | Tracking how facts evolved — decisions reversed or revised over time |
 | `single-session-user` | 45 | Direct recall of specifics stated by the user in a single session |
-| `single-session-assistant` | 35 | Recall of specifics stated by the assistant in a single session |
+| `single-session-assistant` | 32 | Recall of specifics stated by the assistant in a single session |
 | `fact-recall` | 18 | Direct retrieval of a single grounded specific fact |
 
 ## Schema
@@ -99,7 +99,7 @@ Seed  →  Settle  →  Probe  →  Judge
 
 | File | Split | Tasks | Purpose |
 |------|-------|------:|---------|
-| `engram-v3.json` | `v3` (default) | 504 | Full benchmark — use for final evaluation |
+| `engram-v3.json` | `v3` (default) | 498 | Full benchmark — use for final evaluation |
 | `engram-v3-test.json` | `test` | 50 | Lightweight test split — use for development and quick runs |
 
 Both files are hosted on HuggingFace at [matthewschramm/engram-v3](https://huggingface.co/datasets/matthewschramm/engram-v3) and fetched automatically at runtime. They are not committed to the repository.
