@@ -8,19 +8,59 @@ import json
 import logging
 import re
 import sys
-from collections import Counter, defaultdict
+from collections import Counter
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Optional
 
-from scripts.config import (
-    DIFFICULTY_TARGETS,
-    QUESTION_TYPE_TARGETS,
-    TARGET_QUESTIONS,
-    V2_QUESTION_IDS,
-    V3_OUTPUT_PATH,
-    VALIDATION,
-)
+# ── Validation constants (inlined from removed scripts.config) ─────────────────
+V3_OUTPUT_PATH = Path(__file__).parent.parent / "data" / "raw" / "engram-v3.json"
+TARGET_QUESTIONS = 500
+
+QUESTION_TYPE_TARGETS = {
+    "temporal-reasoning": 80,
+    "multi-session": 80,
+    "knowledge-update": 55,
+    "single-session-user": 45,
+    "single-session-assistant": 35,
+    "cross-agent-memory": 80,
+    "multi-hop-reasoning": 70,
+    "recurring-pattern": 55,
+}
+
+DIFFICULTY_TARGETS = {
+    "easy": 100,
+    "medium": 250,
+    "hard": 150,
+}
+
+VALIDATION = {
+    "min_messages_per_session": 4,
+    "max_messages_per_session": 30,
+    "min_answer_length": 20,
+    "max_answer_length": 1000,
+    "min_question_length": 15,
+    "max_question_length": 500,
+    "min_sessions_per_question": 1,
+    "max_sessions_per_question": 10,
+    "distribution_tolerance_pct": 15,
+    "dedup_similarity_threshold": 0.85,
+    "target_file_size_mb_min": 8,
+    "target_file_size_mb_max": 18,
+}
+
+V2_QUESTION_IDS = [
+    "oc_temporal_001", "oc_cross_agent_001", "oc_fact_recall_001",
+    "oc_temporal_002", "oc_cross_agent_002", "oc_multi_hop_001",
+    "oc_recurring_001", "oc_project_001", "oc_agent_hierarchy_001",
+    "oc_debugging_001", "oc_values_001", "oc_integration_001",
+    "oc_lesson_001", "oc_receipt_001", "oc_research_001",
+    "oc_investment_001", "oc_skill_001", "oc_self_improvement_001",
+    "oc_dashboard_001", "oc_posting_001", "oc_team_001",
+    "oc_observability_001", "oc_brian_castle_001",
+    "oc_monitoring_themes_001", "oc_claw_journal_001",
+    "oc_codexai_launch_001", "oc_channel_error_001",
+    "oc_work_paper_001", "oc_worker_model_001",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +103,9 @@ class BenchmarkValidator:
 
     REQUIRED_METADATA_FIELDS = ["agents_involved", "memory_type", "difficulty"]
 
-    VALID_QUESTION_TYPES = set(QUESTION_TYPE_TARGETS.keys()) | {"fact-recall"}  # fact-recall preserved from v2
+    VALID_QUESTION_TYPES = (
+        set(QUESTION_TYPE_TARGETS.keys()) | {"fact-recall"}
+    )
 
     VALID_DIFFICULTIES = {"easy", "medium", "hard"}
 
@@ -84,7 +126,7 @@ class BenchmarkValidator:
         "finance@umoya.ventures",  # Known anonymized finance email
     ]
 
-    def __init__(self, benchmark_path: Optional[Path] = None):
+    def __init__(self, benchmark_path: Path | None = None):
         self.path = benchmark_path or V3_OUTPUT_PATH
         self.data: list[dict] = []
         self.results: list[ValidationResult] = []
@@ -419,7 +461,8 @@ class BenchmarkValidator:
                 if count < v["min_messages_per_session"]:
                     r.warn(f"{qid}: Session {si} has only {count} messages")
                 elif count > v["max_messages_per_session"]:
-                    r.warn(f"{qid}: Session {si} has {count} messages (max: {v['max_messages_per_session']})")
+                    max_msg = v["max_messages_per_session"]
+                    r.warn(f"{qid}: Session {si} has {count} messages (max: {max_msg})")
 
             # Session count per question
             session_count = len(q.get("haystack_sessions", []))
@@ -556,12 +599,12 @@ class BenchmarkValidator:
             diff_dist = Counter(q.get("metadata", {}).get("difficulty", "?") for q in self.data)
 
             print(f"\n  Total questions: {total_q}")
-            print(f"\n  Question types:")
+            print("\n  Question types:")
             for qtype, count in sorted(type_dist.items()):
                 pct = count / total_q * 100
                 print(f"    {qtype}: {count} ({pct:.1f}%)")
 
-            print(f"\n  Difficulty:")
+            print("\n  Difficulty:")
             for diff, count in sorted(diff_dist.items()):
                 pct = count / total_q * 100
                 print(f"    {diff}: {count} ({pct:.1f}%)")
