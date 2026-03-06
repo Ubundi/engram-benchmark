@@ -7,6 +7,13 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+BENCHMARK_RELEASE = "engram-v3.0"
+PROTOCOL_VERSION = "engram-runtime-v1"
+OFFICIAL_SPLIT = "v3"
+OFFICIAL_JUDGE_MODEL = "gpt-4.1-mini"
+OFFICIAL_JUDGE_PASSES = 3
+OFFICIAL_JUDGE_TEMPERATURE = 0.3
+
 
 @dataclass
 class RunConfig:
@@ -32,6 +39,13 @@ class RunConfig:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+def resolve_judge_temperature(config: RunConfig) -> float:
+    """Resolve the effective judge temperature for the current run."""
+    if config.judge_temperature is not None:
+        return config.judge_temperature
+    return OFFICIAL_JUDGE_TEMPERATURE if config.judge_passes > 1 else 0.0
 
 
 def load_config(path: str | None) -> dict[str, Any]:

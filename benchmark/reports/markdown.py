@@ -61,6 +61,8 @@ def write_markdown_report(
     # --- Header ---
     push(f"# Benchmark Report: {condition.upper()}")
     push(
+        f"Release: {run_metadata.get('benchmark_release', '?')} | "
+        f"Protocol: {run_metadata.get('protocol_version', '?')} | "
         f"Generated: {run_metadata.get('timestamp_utc', '?')} | "
         f"Agent: {cfg.get('agent_id') or cfg.get('agent', '?')} | "
         f"Git: {run_metadata.get('git_commit', '?')}"
@@ -72,9 +74,13 @@ def write_markdown_report(
     push()
     push("| Setting | Value |")
     push("|---------|-------|")
+    official = run_metadata.get("official_setting", {})
+    push(f"| Benchmark release | {run_metadata.get('benchmark_release', '?')} |")
+    push(f"| Protocol version | {run_metadata.get('protocol_version', '?')} |")
+    push(f"| Dataset split | {cfg.get('split', '?')} |")
     push(f"| Judge model | {cfg.get('judge_model', '?')} |")
     push(f"| Judge passes | {cfg.get('judge_passes', '?')} |")
-    push(f"| Judge temperature | {cfg.get('judge_temperature', 'auto')} |")
+    push(f"| Judge temperature | {official.get('judge_temperature', cfg.get('judge_temperature', 'auto'))} |")
     push(f"| Judge concurrency | {cfg.get('judge_concurrency', '?')} |")
     push(f"| Task count | {run_metadata.get('task_count', '?')} |")
     push(f"| Settle seconds | {cfg.get('settle_seconds', '?')} |")

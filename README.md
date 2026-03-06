@@ -9,7 +9,7 @@
   <a href="https://huggingface.co/datasets/matthewschramm/engram-v3"><img src="https://img.shields.io/badge/%F0%9F%A4%97-Dataset-yellow.svg" alt="Dataset on HF"></a>
 </p>
 
-[Dataset](https://huggingface.co/datasets/matthewschramm/engram-v3) &nbsp;·&nbsp; [Benchmark Spec](docs/benchmark_spec.md) &nbsp;·&nbsp; [Evaluation Protocol](docs/evaluation_protocol.md) &nbsp;·&nbsp; [Dataset Card](docs/dataset_card.md) &nbsp;·&nbsp; [Leaderboard Policy](docs/leaderboard.md) &nbsp;·&nbsp; [Integration Guide](docs/integration_guide.md)
+[Dataset](https://huggingface.co/datasets/matthewschramm/engram-v3) &nbsp;·&nbsp; [Benchmark Spec](docs/benchmark_spec.md) &nbsp;·&nbsp; [Official Release](docs/benchmark_release_v3.md) &nbsp;·&nbsp; [Evaluation Protocol](docs/evaluation_protocol.md) &nbsp;·&nbsp; [Dataset Card](docs/dataset_card.md) &nbsp;·&nbsp; [Leaderboard Policy](docs/leaderboard.md) &nbsp;·&nbsp; [Integration Guide](docs/integration_guide.md)
 
 ---
 
@@ -31,12 +31,24 @@ Official benchmark artifacts for the current public release:
 
 | Artifact | Value |
 |----------|-------|
-| Benchmark release | Engram v3 |
+| Benchmark release | Engram v3.0 (`engram-v3.0`) |
 | Tasks | 498 |
 | Question types | 9 |
 | Primary metric | Mean judge score (0-3) |
 | Secondary metrics | Grounded rate, hallucination rate, abstention rate, per-category scores |
-| Official protocol | Seed -> Settle -> Probe -> Judge |
+| Official protocol | Seed -> Settle -> Probe -> Judge (`engram-runtime-v1`) |
+
+## Official Benchmark Setting
+
+Engram v3.0 has a frozen official public setting for benchmark-comparable runs:
+
+- Split: `v3`
+- Judge model: `gpt-4.1-mini`
+- Judge passes: `3`
+- Judge temperature: `0.3`
+- Required artifacts: `metrics.json`, `run_metadata.json`, `predictions.jsonl`, `seed_turns.jsonl`, `probes.jsonl`, `judgments.jsonl`
+
+See [docs/benchmark_release_v3.md](docs/benchmark_release_v3.md) for the full release policy, including condition-specific settle defaults and reporting requirements.
 
 ---
 

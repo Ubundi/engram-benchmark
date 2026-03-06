@@ -5,6 +5,8 @@
   "description": "Provenance and configuration for a benchmark run.",
   "type": "object",
   "required": [
+    "benchmark_release",
+    "protocol_version",
     "run_id",
     "timestamp_utc",
     "config",
@@ -12,6 +14,28 @@
     "prediction_count"
   ],
   "properties": {
+    "benchmark_release": {
+      "description": "Frozen benchmark release identifier.",
+      "type": "string",
+      "minLength": 1
+    },
+    "protocol_version": {
+      "description": "Runtime protocol version identifier.",
+      "type": "string",
+      "minLength": 1
+    },
+    "official_setting": {
+      "description": "Effective official-setting identifiers for this run.",
+      "type": "object",
+      "required": ["split", "judge_model", "judge_passes", "judge_temperature"],
+      "properties": {
+        "split": { "type": "string" },
+        "judge_model": { "type": "string" },
+        "judge_passes": { "type": "integer", "minimum": 1 },
+        "judge_temperature": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
     "run_id": {
       "description": "Run identifier in YYYYMMDDTHHMMSSz format.",
       "type": "string",

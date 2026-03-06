@@ -8,6 +8,7 @@ from pathlib import Path
 # scripts/ is not an installed package — add project root to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from benchmark.config import BENCHMARK_RELEASE, PROTOCOL_VERSION
 from scripts.validate_submission import validate
 
 
@@ -37,9 +38,17 @@ def _valid_dir():
     _write(
         d / "run_metadata.json",
         {
+            "benchmark_release": BENCHMARK_RELEASE,
+            "protocol_version": PROTOCOL_VERSION,
+            "official_setting": {
+                "split": "v3",
+                "judge_model": "gpt-4.1-mini",
+                "judge_passes": 3,
+                "judge_temperature": 0.3,
+            },
             "run_id": "20260304T093015Z",
             "timestamp_utc": "2026-03-04T09:30:15Z",
-            "config": {"agent": "test", "split": "v3"},
+            "config": {"agent": "test", "split": "v3", "skip_seed": False, "dry_run": False},
             "task_count": 2,
             "prediction_count": 2,
         },
@@ -103,9 +112,17 @@ class TestSubmissionValidator:
         _write(
             d / "run_metadata.json",
             {
+                "benchmark_release": BENCHMARK_RELEASE,
+                "protocol_version": PROTOCOL_VERSION,
+                "official_setting": {
+                    "split": "v3",
+                    "judge_model": "gpt-4.1-mini",
+                    "judge_passes": 3,
+                    "judge_temperature": 0.3,
+                },
                 "run_id": "test",
                 "timestamp_utc": "2026-03-04T00:00:00Z",
-                "config": {"agent": "test", "split": "v3"},
+                "config": {"agent": "test", "split": "v3", "skip_seed": False, "dry_run": False},
                 "task_count": 2,
                 "prediction_count": 99,
             },
@@ -113,6 +130,46 @@ class TestSubmissionValidator:
         result = validate(d)
         assert not result.passed
         assert any("Consistency" in e for e in result.errors)
+
+    def test_missing_official_release_metadata_fails(self):
+        d = _valid_dir()
+        _write(
+            d / "run_metadata.json",
+            {
+                "run_id": "20260304T093015Z",
+                "timestamp_utc": "2026-03-04T09:30:15Z",
+                "config": {"agent": "test", "split": "v3"},
+                "task_count": 2,
+                "prediction_count": 2,
+            },
+        )
+        result = validate(d)
+        assert not result.passed
+        assert any("benchmark_release" in e for e in result.errors)
+
+    def test_non_official_judge_config_fails(self):
+        d = _valid_dir()
+        _write(
+            d / "run_metadata.json",
+            {
+                "benchmark_release": BENCHMARK_RELEASE,
+                "protocol_version": PROTOCOL_VERSION,
+                "official_setting": {
+                    "split": "v3",
+                    "judge_model": "gpt-4.1",
+                    "judge_passes": 1,
+                    "judge_temperature": 0.0,
+                },
+                "run_id": "20260304T093015Z",
+                "timestamp_utc": "2026-03-04T09:30:15Z",
+                "config": {"agent": "test", "split": "v3", "skip_seed": False, "dry_run": False},
+                "task_count": 2,
+                "prediction_count": 2,
+            },
+        )
+        result = validate(d)
+        assert not result.passed
+        assert any("official_setting.judge_model" in e for e in result.errors)
 
     def test_missing_phase_artifacts_are_warnings(self):
         d = _valid_dir()

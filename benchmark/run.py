@@ -14,7 +14,14 @@ from typing import Any
 
 from benchmark.adapters import get_adapter
 from benchmark.adapters.openclaw_cli import VALID_CONDITIONS
-from benchmark.config import RunConfig, load_config
+from benchmark.config import (
+    BENCHMARK_RELEASE,
+    OFFICIAL_SPLIT,
+    PROTOCOL_VERSION,
+    RunConfig,
+    load_config,
+    resolve_judge_temperature,
+)
 from benchmark.evaluators.abstain import evaluate_abstain
 from benchmark.evaluators.qa import evaluate_qa
 from benchmark.evaluators.retrieval import evaluate_retrieval
@@ -345,6 +352,14 @@ def run_benchmark(config: RunConfig) -> dict[str, Any]:
 
     run_id = datetime.now(tz=timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     run_metadata: dict[str, Any] = {
+        "benchmark_release": BENCHMARK_RELEASE,
+        "protocol_version": PROTOCOL_VERSION,
+        "official_setting": {
+            "split": OFFICIAL_SPLIT,
+            "judge_model": config.judge_model,
+            "judge_passes": config.judge_passes,
+            "judge_temperature": resolve_judge_temperature(config),
+        },
         "run_id": run_id,
         "timestamp_utc": datetime.now(tz=timezone.utc).isoformat(),
         "condition": config.condition,

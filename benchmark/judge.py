@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from benchmark.config import RunConfig
 
+from benchmark.config import resolve_judge_temperature
+
 logger = logging.getLogger(__name__)
 
 _SYSTEM_PROMPT = """\
@@ -66,10 +68,7 @@ def _call_judge(
         "model": config.judge_model,
         "messages": messages,
     }
-    temperature = config.judge_temperature
-    if temperature is None:
-        temperature = 0.3 if config.judge_passes > 1 else 0.0
-    body["temperature"] = temperature
+    body["temperature"] = resolve_judge_temperature(config)
 
     data = json.dumps(body).encode("utf-8")
     url = f"{config.judge_base_url.rstrip('/')}/chat/completions"

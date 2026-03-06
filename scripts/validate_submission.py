@@ -19,6 +19,15 @@ import json
 import sys
 from pathlib import Path
 
+from benchmark.config import (
+    BENCHMARK_RELEASE,
+    OFFICIAL_JUDGE_MODEL,
+    OFFICIAL_JUDGE_PASSES,
+    OFFICIAL_JUDGE_TEMPERATURE,
+    OFFICIAL_SPLIT,
+    PROTOCOL_VERSION,
+)
+
 SCHEMAS_DIR = Path(__file__).resolve().parents[1] / "data" / "schemas"
 
 REQUIRED_FILES = [
@@ -125,6 +134,8 @@ def _check_run_metadata(run_dir: Path, result: ValidationResult) -> None:
         return
 
     required = [
+        "benchmark_release",
+        "protocol_version",
         "run_id",
         "timestamp_utc",
         "config",
@@ -142,6 +153,54 @@ def _check_run_metadata(run_dir: Path, result: ValidationResult) -> None:
                 result.error(f"run_metadata.json: config missing required key '{key}'")
     elif config is not None:
         result.error("run_metadata.json: config must be an object")
+
+    official_setting = meta.get("official_setting")
+    if not isinstance(official_setting, dict):
+        result.error("run_metadata.json: missing or invalid 'official_setting'")
+        return
+
+    if meta.get("benchmark_release") != BENCHMARK_RELEASE:
+        result.error(
+            "run_metadata.json: benchmark_release must be "
+            f"'{BENCHMARK_RELEASE}' for official submissions"
+        )
+    if meta.get("protocol_version") != PROTOCOL_VERSION:
+        result.error(
+            "run_metadata.json: protocol_version must be "
+            f"'{PROTOCOL_VERSION}' for official submissions"
+        )
+
+    if isinstance(config, dict):
+        if config.get("split") != OFFICIAL_SPLIT:
+            result.error(
+                f"run_metadata.json: config.split must be '{OFFICIAL_SPLIT}' "
+                "for official submissions"
+            )
+        if config.get("skip_seed") is True:
+            result.error("run_metadata.json: official submissions may not use skip_seed")
+        if config.get("dry_run") is True:
+            result.error("run_metadata.json: official submissions may not use dry_run")
+
+    if official_setting.get("split") != OFFICIAL_SPLIT:
+        result.error(
+            "run_metadata.json: official_setting.split must be "
+            f"'{OFFICIAL_SPLIT}'"
+        )
+    if official_setting.get("judge_model") != OFFICIAL_JUDGE_MODEL:
+        result.error(
+            "run_metadata.json: official_setting.judge_model must be "
+            f"'{OFFICIAL_JUDGE_MODEL}'"
+        )
+    if official_setting.get("judge_passes") != OFFICIAL_JUDGE_PASSES:
+        result.error(
+            "run_metadata.json: official_setting.judge_passes must be "
+            f"{OFFICIAL_JUDGE_PASSES}"
+        )
+    if official_setting.get("judge_temperature") != OFFICIAL_JUDGE_TEMPERATURE:
+        result.error(
+            "run_metadata.json: official_setting.judge_temperature must be "
+            f"{OFFICIAL_JUDGE_TEMPERATURE}"
+        )
 
 
 def _check_predictions(run_dir: Path, result: ValidationResult) -> int:
