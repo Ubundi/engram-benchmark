@@ -267,7 +267,11 @@ def run_benchmark(config: RunConfig) -> dict[str, Any]:
             turns = result.get("turn_count", 0)
             logger.info(
                 "seed: [%d/%d] task=%s sessions=%d turns=%d",
-                i + 1, len(tasks), task["id"], sessions, turns,
+                i + 1,
+                len(tasks),
+                task["id"],
+                sessions,
+                turns,
             )
     else:
         logger.info("phase 1: skipped (--skip-seed)")
@@ -308,7 +312,10 @@ def run_benchmark(config: RunConfig) -> dict[str, Any]:
         predictions.append(prediction)
         logger.info(
             "probe: [%d/%d] task=%s (%dms)",
-            i + 1, len(tasks), task["id"], duration_ms,
+            i + 1,
+            len(tasks),
+            task["id"],
+            duration_ms,
         )
         probes.append(
             {

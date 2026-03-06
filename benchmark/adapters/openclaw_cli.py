@@ -301,8 +301,10 @@ class OpenClawCLIAdapter(BaseAdapter):
                 user_turn_idx += 1
                 logger.info(
                     "  session %d/%d turn %d/%d (%dms)",
-                    idx + 1, len(sessions),
-                    user_turn_idx, session_user_turns,
+                    idx + 1,
+                    len(sessions),
+                    user_turn_idx,
+                    session_user_turns,
                     duration,
                 )
 
