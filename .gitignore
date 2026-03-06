@@ -41,5 +41,8 @@ data/splits/v3.jsonl
 # OS
 .DS_Store
 
+# Claude Code
+.claude/
+
 
 v2/

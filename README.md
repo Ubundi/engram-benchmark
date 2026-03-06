@@ -5,7 +5,7 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.10%2B-blue.svg" alt="Python 3.10+"></a>
-  <a href="https://github.com/Ubundi/cortex-benchmark/actions/workflows/ci.yml"><img src="https://github.com/Ubundi/cortex-benchmark/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/Ubundi/engram-benchmark/actions/workflows/ci.yml"><img src="https://github.com/Ubundi/engram-benchmark/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://huggingface.co/datasets/matthewschramm/engram-v3"><img src="https://img.shields.io/badge/%F0%9F%A4%97-Dataset-yellow.svg" alt="Dataset on HF"></a>
 </p>
 
@@ -102,7 +102,7 @@ See [docs/integration_guide.md](docs/integration_guide.md) for the HTTP server c
 Clone the repo on an EC2 instance where OpenClaw is already installed:
 
 ```bash
-git clone https://github.com/Ubundi/cortex-benchmark.git && cd cortex-benchmark
+git clone https://github.com/Ubundi/engram-benchmark.git && cd engram-benchmark
 pip install -e ".[dev]"
 hf auth login
 ```
@@ -251,7 +251,7 @@ engram/
   title   = {Engram: A Runtime Benchmark for Agent Long-Term Memory Recall},
   author  = {Ubundi},
   year    = {2026},
-  url     = {https://github.com/Ubundi/cortex-benchmark},
+  url     = {https://github.com/Ubundi/engram-benchmark},
 }
 ```
 

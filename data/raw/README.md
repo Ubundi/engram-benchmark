@@ -133,7 +133,7 @@ python3 -m benchmark.run --agent <id> --split test
 
 ## Benchmark Harness
 
-The full evaluation harness — including HuggingFace fetching, OpenClaw adapter, LLM judge, and artifact writers — is available at [Ubundi/cortex-benchmark](https://github.com/Ubundi/cortex-benchmark).
+The full evaluation harness — including HuggingFace fetching, OpenClaw adapter, LLM judge, and artifact writers — is available at [Ubundi/engram-benchmark](https://github.com/Ubundi/engram-benchmark).
 
 ```bash
 pip install -e ".[dev]"
@@ -147,7 +147,7 @@ JUDGE_API_KEY="<key>" python3 -m benchmark.run --agent <openclaw-agent-id>
   title   = {Engram: A Runtime Benchmark for Agent Long-Term Memory Recall},
   author  = {Ubundi},
   year    = {2026},
-  url     = {https://github.com/Ubundi/cortex-benchmark},
+  url     = {https://github.com/Ubundi/engram-benchmark},
 }
 ```
 

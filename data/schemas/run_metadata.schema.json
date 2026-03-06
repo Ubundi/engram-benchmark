@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Ubundi/cortex-benchmark/schemas/run_metadata.schema.json",
+  "$id": "https://github.com/Ubundi/engram-benchmark/schemas/run_metadata.schema.json",
   "title": "RunMetadata",
   "description": "Provenance and configuration for a benchmark run.",
   "type": "object",

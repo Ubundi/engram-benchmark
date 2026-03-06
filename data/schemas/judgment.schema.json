@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Ubundi/cortex-benchmark/schemas/judgment.schema.json",
+  "$id": "https://github.com/Ubundi/engram-benchmark/schemas/judgment.schema.json",
   "title": "Judgment",
   "description": "A single judgment record from the LLM judge.",
   "type": "object",

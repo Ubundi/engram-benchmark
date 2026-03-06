@@ -16,7 +16,7 @@ The benchmark executes a four-phase pipeline:
 ## Prerequisites
 
 ```bash
-pip install cortex-benchmark
+pip install engram-benchmark
 huggingface-cli login   # required to download the dataset
 ```
 
@@ -221,8 +221,8 @@ JUDGE_API_KEY="sk-..." python3 -m benchmark.run \
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/Ubundi/cortex-benchmark.git
-cd cortex-benchmark
+git clone https://github.com/Ubundi/engram-benchmark.git
+cd engram-benchmark
 pip install -e ".[dev]"
 
 # 2. Authenticate with HuggingFace
