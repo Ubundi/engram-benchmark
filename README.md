@@ -61,7 +61,7 @@ path = fetch_engram_dataset()  # downloads and caches locally
 | Format | JSON |
 | HuggingFace | [matthewschramm/engram-v3](https://huggingface.co/datasets/matthewschramm/engram-v3) |
 
-Authentication required: run `hf auth login` or set `HF_TOKEN`.
+The dataset is public — no authentication required.
 
 ---
 
@@ -70,22 +70,19 @@ Authentication required: run `hf auth login` or set `HF_TOKEN`.
 ### 1. Install
 
 ```bash
-pip install -e ".[dev]"
+curl -LsSf https://astral.sh/uv/install.sh | sh   # install uv if not already installed
+source $HOME/.local/bin/env                        # add uv to PATH
+uv venv && source .venv/bin/activate
+uv pip install -e ".[dev]"
 ```
 
-### 2. Authenticate
-
-```bash
-hf auth login        # or: export HF_TOKEN=<your-token>
-```
-
-### 3. Dry run (local stub, no agent required)
+### 2. Dry run (local stub, no agent required)
 
 ```bash
 python3 -m benchmark.run --agent local_stub
 ```
 
-### 4. Run against a live agent
+### 3. Run against a live agent
 
 Start your agent server, then point the benchmark at it:
 
@@ -97,14 +94,14 @@ Engram seeds memory sessions into the agent, waits for memory processing to sett
 
 See [docs/integration_guide.md](docs/integration_guide.md) for the HTTP server contract, the OpenClaw CLI adapter, and a custom Python adapter option.
 
-### 5. Run on EC2 with OpenClaw
+### 4. Run on EC2 with OpenClaw
 
 Clone the repo on an EC2 instance where OpenClaw is already installed:
 
 ```bash
 git clone https://github.com/Ubundi/engram-benchmark.git && cd engram-benchmark
-pip install -e ".[dev]"
-hf auth login
+uv venv && source .venv/bin/activate
+uv pip install -e ".[dev]"
 ```
 
 Dry-run first to confirm the setup:

@@ -28,8 +28,7 @@ def _hf_download(filename: str) -> Path:
 def fetch_engram_dataset() -> Path:
     """Download the full engram-v3.json dataset from HuggingFace.
 
-    Requires HF authentication for the private repo — either run `hf auth login`
-    or set the HF_TOKEN environment variable.
+    The dataset is public — no authentication required.
     """
     return _hf_download(HF_FILENAME)
 
@@ -37,7 +36,6 @@ def fetch_engram_dataset() -> Path:
 def fetch_engram_test_dataset() -> Path:
     """Download the 50-question test split from HuggingFace.
 
-    Requires HF authentication for the private repo — either run `hf auth login`
-    or set the HF_TOKEN environment variable.
+    The dataset is public — no authentication required.
     """
     return _hf_download(HF_TEST_FILENAME)
