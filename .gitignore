@@ -43,6 +43,8 @@ data/splits/v3.jsonl
 
 # Claude Code
 .claude/
+CLAUDE.md
+agent_docs/
 
 
 v2/

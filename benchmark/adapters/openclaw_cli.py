@@ -277,6 +277,8 @@ class OpenClawCLIAdapter(BaseAdapter):
             if self._condition == "cortex" and idx < len(haystack_dates):
                 session_date = self._parse_dataset_date(haystack_dates[idx])
 
+            # Count user turns in this session for logging
+            session_user_turns = sum(1 for t in session if t.get("role") == "user")
             user_turn_idx = 0
             for turn in session:
                 if turn.get("role") != "user":
@@ -293,16 +295,23 @@ class OpenClawCLIAdapter(BaseAdapter):
                     )
 
                 result = self._call(content, session_id=session_id)
-                total_duration_ms += result.get("duration_ms", 0)
+                duration = result.get("duration_ms", 0)
+                total_duration_ms += duration
                 turn_count += 1
                 user_turn_idx += 1
+                logger.info(
+                    "  session %d/%d turn %d/%d (%dms)",
+                    idx + 1, len(sessions),
+                    user_turn_idx, session_user_turns,
+                    duration,
+                )
 
                 if result.get("error"):
                     errors.append(f"session {idx}: {result['error']}")
 
             # Flush session to trigger memory hooks (V2 --flush-sessions)
             if self._flush_sessions:
-                logger.debug("flushing session %d (sending /new)", idx)
+                logger.info("  session %d/%d flushing (/new)", idx + 1, len(sessions))
                 self._call("/new", session_id=session_id)
 
         meta: dict[str, Any] = {

@@ -260,9 +260,15 @@ def run_benchmark(config: RunConfig) -> dict[str, Any]:
     seed_turns: list[dict[str, Any]] = []
     if not config.skip_seed:
         logger.info("phase 1: seeding %d tasks", len(tasks))
-        for task in tasks:
+        for i, task in enumerate(tasks):
             result = adapter.seed(task)
             seed_turns.append({"task_id": task["id"], **result})
+            sessions = result.get("session_count", 0)
+            turns = result.get("turn_count", 0)
+            logger.info(
+                "seed: [%d/%d] task=%s sessions=%d turns=%d",
+                i + 1, len(tasks), task["id"], sessions, turns,
+            )
     else:
         logger.info("phase 1: skipped (--skip-seed)")
 
@@ -289,8 +295,6 @@ def run_benchmark(config: RunConfig) -> dict[str, Any]:
     probes: list[dict[str, Any]] = []
     probe_latencies: list[int] = []
     for i, task in enumerate(tasks):
-        if (i + 1) % 50 == 0:
-            logger.info("probe: [%d/%d]", i + 1, len(tasks))
         result = adapter.predict(task)
         output = result.get("output", "")
         duration_ms = result.get("metadata", {}).get("duration_ms", 0)
@@ -302,6 +306,10 @@ def run_benchmark(config: RunConfig) -> dict[str, Any]:
             "metadata": result.get("metadata", {}),
         }
         predictions.append(prediction)
+        logger.info(
+            "probe: [%d/%d] task=%s (%dms)",
+            i + 1, len(tasks), task["id"], duration_ms,
+        )
         probes.append(
             {
                 "task_id": task["id"],
