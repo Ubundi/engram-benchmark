@@ -109,7 +109,11 @@ def test_openclaw_adapter_predict_captures_error() -> None:
 
 def test_openclaw_adapter_predict_cortex_date_injection() -> None:
     adapter = OpenClawCLIAdapter(condition="cortex")
-    task = {"id": "t1", "input": "What happened?"}
+    task = {
+        "id": "t1",
+        "input": "What happened?",
+        "metadata": {"question_date": "2026/03/04 (Wed) 15:00"},
+    }
     with patch.object(adapter, "_call") as mock_call:
         mock_call.return_value = {
             "response": "stuff",
@@ -117,8 +121,50 @@ def test_openclaw_adapter_predict_cortex_date_injection() -> None:
         }
         adapter.predict(task)
     sent_msg = mock_call.call_args.args[0]
-    assert "[cortex-date:" in sent_msg
+    assert "[cortex-date: 2026-03-04]" in sent_msg
     assert "What happened?" in sent_msg
+
+
+def test_openclaw_adapter_predict_cortex_no_date() -> None:
+    """Probe without question_date should skip date injection."""
+    adapter = OpenClawCLIAdapter(condition="cortex")
+    task = {"id": "t1", "input": "What happened?", "metadata": {}}
+    with patch.object(adapter, "_call") as mock_call:
+        mock_call.return_value = {"response": "stuff", "duration_ms": 10}
+        adapter.predict(task)
+    sent_msg = mock_call.call_args.args[0]
+    assert "[cortex-date:" not in sent_msg
+
+
+def test_openclaw_adapter_seed_cortex_date_injection() -> None:
+    """Seed phase should inject haystack_dates into first user turn."""
+    adapter = OpenClawCLIAdapter(condition="cortex")
+    task = {
+        "id": "t1",
+        "input": "probe",
+        "metadata": {
+            "haystack_sessions": [
+                [
+                    {"role": "user", "content": "hi"},
+                    {"role": "assistant", "content": "hello"},
+                ]
+            ],
+            "haystack_dates": ["2026/02/20 (Fri) 14:43"],
+        },
+    }
+    with patch.object(adapter, "_call") as mock_call:
+        mock_call.return_value = {"response": "ok", "duration_ms": 10}
+        adapter.seed(task)
+    sent_msg = mock_call.call_args_list[0].args[0]
+    assert "2026-02-20" in sent_msg
+    assert "hi" in sent_msg
+
+
+def test_parse_dataset_date() -> None:
+    assert OpenClawCLIAdapter._parse_dataset_date("2026/02/20 (Fri) 14:43") == "2026-02-20"
+    assert OpenClawCLIAdapter._parse_dataset_date("2026/03/04 (Wed) 15:00") == "2026-03-04"
+    assert OpenClawCLIAdapter._parse_dataset_date("bad format") is None
+    assert OpenClawCLIAdapter._parse_dataset_date("") is None
 
 
 def test_openclaw_adapter_seed_skips_assistant_turns() -> None:

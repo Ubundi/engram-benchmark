@@ -236,30 +236,22 @@ class OpenClawCLIAdapter(BaseAdapter):
         logger.info("preflight: Cortex integration healthy (tools present, /memories succeeded)")
 
     # ------------------------------------------------------------------
-    # Cortex date helpers
+    # Date helpers (Engram V3 dataset)
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _get_session_date(
-        session_meta: dict[str, Any],
-        base_date_ms: int,
-    ) -> str | None:
-        """Compute YYYY-MM-DD from a session description's 'Day N'.
+    def _parse_dataset_date(raw: str) -> str | None:
+        """Extract YYYY-MM-DD from Engram V3 date format.
 
-        Mirrors V2's getSessionDate() — derives the date from the Arclight
-        base date (2024-10-07) plus the day offset in the description.
+        The dataset uses formats like ``"2026/02/20 (Fri) 14:43"``.
+        Returns ``"2026-02-20"`` or *None* if parsing fails.
         """
         import re
-        from datetime import datetime, timedelta, timezone
 
-        desc = session_meta.get("description", "")
-        match = re.search(r"Day (\d+)", desc, re.IGNORECASE)
+        match = re.match(r"(\d{4})/(\d{2})/(\d{2})", raw.strip())
         if not match:
             return None
-        day = int(match.group(1))
-        base = datetime.fromtimestamp(base_date_ms / 1000, tz=timezone.utc)
-        dt = base + timedelta(days=day - 1)
-        return dt.strftime("%Y-%m-%d")
+        return f"{match.group(1)}-{match.group(2)}-{match.group(3)}"
 
     # ------------------------------------------------------------------
     # Seed phase
@@ -270,8 +262,8 @@ class OpenClawCLIAdapter(BaseAdapter):
         if not sessions:
             return {"seeded": False, "session_count": 0}
 
-        # Cortex date injection constants (Arclight dataset)
-        arclight_base_ms = 1728259200000  # 2024-10-07T00:00:00Z
+        # Engram V3: haystack_dates is positionally aligned with sessions
+        haystack_dates = task.get("metadata", {}).get("haystack_dates", [])
 
         errors: list[str] = []
         total_duration_ms = 0
@@ -280,12 +272,10 @@ class OpenClawCLIAdapter(BaseAdapter):
         for idx, session in enumerate(sessions):
             session_id = f"seed-{task['id']}-{idx}-{uuid.uuid4().hex[:8]}"
 
-            # Compute session date for cortex condition
+            # Extract session date from haystack_dates for cortex condition
             session_date: str | None = None
-            if self._condition == "cortex":
-                session_meta = task.get("metadata", {}).get("haystack_session_meta", [{}])
-                meta = session_meta[idx] if idx < len(session_meta) else {}
-                session_date = self._get_session_date(meta, arclight_base_ms)
+            if self._condition == "cortex" and idx < len(haystack_dates):
+                session_date = self._parse_dataset_date(haystack_dates[idx])
 
             user_turn_idx = 0
             for turn in session:
@@ -329,16 +319,17 @@ class OpenClawCLIAdapter(BaseAdapter):
     # Probe phase
     # ------------------------------------------------------------------
 
-    # Arclight project end date — one day after last session (Day 42)
-    _ARCLIGHT_END_DATE = "2024-11-18"
-
     def predict(self, task: dict[str, Any]) -> dict[str, Any]:
         probe_session = f"probe-{task['id']}-{uuid.uuid4().hex[:8]}"
 
         content = task["input"]
-        # Cortex date annotation for temporal accuracy (V2 pattern)
+        # Cortex date annotation for temporal accuracy — uses question_date
+        # from the Engram dataset metadata
         if self._condition == "cortex":
-            content = f"[cortex-date: {self._ARCLIGHT_END_DATE}]\n\n{content}"
+            raw_date = task.get("metadata", {}).get("question_date", "")
+            probe_date = self._parse_dataset_date(raw_date) if raw_date else None
+            if probe_date:
+                content = f"[cortex-date: {probe_date}]\n\n{content}"
 
         result = self._call(content, session_id=probe_session)
 
