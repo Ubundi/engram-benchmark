@@ -16,9 +16,13 @@ _SCORE_LABELS = {
 def _score_label(score: float | None) -> str:
     if score is None:
         return "ERROR"
+    if float(score).is_integer():
+        rounded = round(score)
+        label = _SCORE_LABELS.get(rounded, "?")
+        return f"{rounded} ({label})"
     rounded = round(score)
     label = _SCORE_LABELS.get(rounded, "?")
-    return f"{rounded} ({label})"
+    return f"{score:.2f} (avg; nearest {rounded}: {label})"
 
 
 def _mean(values: list[float]) -> str:
@@ -91,6 +95,28 @@ def write_markdown_report(
     push(f"| Dry run | {cfg.get('dry_run', False)} |")
     push()
 
+    # --- Scoring Interpretation ---
+    push("## Scoring Interpretation")
+    push()
+    push(
+        "This run is scored as a memory-behavior evaluation, not a binary QA test. "
+        "The benchmark asks whether the agent retrieved the required specific detail, "
+        "recalled only the right general area, abstained safely, or hallucinated."
+    )
+    push()
+    push("| Score | Interpretation |")
+    push("|-------|----------------|")
+    push("| 3 | Grounded recall: the required specific detail is present. |")
+    push("| 2 | Partial recall: directionally right, but missing the decisive detail. |")
+    push("| 1 | Safe abstention: the agent declines or says it lacks the memory without inventing specifics. |")
+    push("| 0 | Hallucinated specificity: the answer includes a wrong or fabricated specific claim. |")
+    push()
+    push(
+        "A score of `3` is the benchmark's success state for grounded memory recall. "
+        "A score of `2` is useful signal, but it is not full credit."
+    )
+    push()
+
     # --- Seed Phase Summary ---
     push("## Seed Phase Summary")
     push()
@@ -113,7 +139,7 @@ def write_markdown_report(
     push()
 
     # Scores by category
-    push("### Scores by Category (0-3)")
+    push("### Scores by Category (Memory Quality, 0-3)")
     push()
     push("| Category | Mean | Count |")
     push("|----------|------|-------|")
@@ -141,7 +167,7 @@ def write_markdown_report(
     # Score distribution
     dist = _score_dist(judgments)
     total_valid = len(all_scores) or 1
-    push("### Score Distribution")
+    push("### Memory Behavior Distribution")
     push()
     push("| Score | Meaning | Count | % |")
     push("|-------|---------|-------|---|")

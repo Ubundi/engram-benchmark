@@ -55,20 +55,21 @@ Skipping any phase changes what you're measuring. `--skip-seed` probes an alread
 
 ## Why 0–3 Scoring?
 
-Binary scoring (correct/incorrect) doesn't capture the failure modes that matter for memory systems. An agent that says "I think there was a meeting about that" vs. one that says "The March 4th standup decided to switch from Redis to PostgreSQL for the cache layer" are both partially correct, but the second is operationally useful.
+Binary scoring (correct/incorrect) doesn't capture the failure modes that matter for memory systems. Engram is evaluating what the memory system did after the original context was gone, not just whether an answer could be labeled right or wrong. An agent that says "I think there was a meeting about that" vs. one that says "The March 4th standup decided to switch from Redis to PostgreSQL for the cache layer" should not receive the same credit.
 
 | Score | Label | What it means | Why it matters |
 |------:|-------|---------------|----------------|
-| 3 | Grounded correct | Cites the specific detail from the haystack | The agent's memory is working — it retrieved and grounded its answer |
-| 2 | Generic correct | Right direction, missing the specific | Retrieval found relevant context but compaction lost the detail |
-| 1 | Abstained | "I don't have that context" | Honest uncertainty — better than hallucination, signals retrieval miss |
-| 0 | Hallucinated | Wrong specific stated with confidence | The worst outcome — the agent fabricated a plausible but false detail |
+| 3 | Grounded correct | Contains the required specific detail from the haystack; paraphrase is fine, but the decisive fact must be present | The agent retrieved and grounded the answer rather than only recalling the topic |
+| 2 | Generic correct | Directionally right, but missing the required specific detail | The system found the right area of memory, but not enough detail to count as grounded recall |
+| 1 | Abstained | Says it lacks the memory or context, or otherwise declines to answer without inventing specifics | Honest uncertainty is safer than fabrication and signals a retrieval miss |
+| 0 | Hallucinated | Gives a wrong or fabricated specific claim; mixed answers with an incorrect specific should land here | This is the dangerous failure mode: the agent produced unsupported specificity |
 
 This scale makes the metrics actionable:
 - **Mean score** tracks overall quality
 - **Hit rate** (score >= 2) measures retrieval effectiveness
 - **Abstention rate** (score == 1) measures calibration
 - Score 0 vs. 1 separates dangerous failures from safe ones
+- Score 3 vs. 2 separates grounded recall from partial recollection
 
 ---
 

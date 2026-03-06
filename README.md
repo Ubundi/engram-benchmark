@@ -13,7 +13,7 @@
 
 ---
 
-**Engram** is a runtime benchmark for evaluating long-term memory in AI agents. It measures whether an agent can recover grounded, specific knowledge from prior sessions after the original context window is gone.
+**Engram** is a runtime benchmark for evaluating long-term memory in AI agents. It measures memory behavior after the original context window is gone: whether an agent can recover grounded, specific knowledge from prior sessions, fall back to only partial recollection, abstain safely, or hallucinate.
 
 Unlike static QA or retrieval-only tests, Engram runs inside the agent runtime itself: it seeds multi-turn conversation histories, waits for memory processing to settle, then probes recall in a fresh session with no haystack in context. Whatever memory architecture the agent actually uses is what gets measured.
 
@@ -27,6 +27,8 @@ Engram is designed to answer three benchmark questions:
 - Can it preserve rationale, evolution, and cross-session synthesis rather than only isolated facts?
 - How does it trade off grounded recall, abstention, and hallucination under a fixed runtime protocol?
 
+Engram is not trying to reduce memory evaluation to binary QA accuracy. The benchmark intentionally distinguishes four outcomes: grounded recall, generic but underspecified recall, abstention, and hallucinated specificity.
+
 Official benchmark artifacts for the current public release:
 
 | Artifact | Value |
@@ -34,7 +36,7 @@ Official benchmark artifacts for the current public release:
 | Benchmark release | Engram v3.0 (`engram-v3.0`) |
 | Tasks | 498 |
 | Question types | 9 |
-| Primary metric | Mean judge score (0-3) |
+| Primary metric | Mean memory-quality judge score (0-3) |
 | Secondary metrics | Grounded rate, hallucination rate, abstention rate, per-category scores |
 | Official protocol | Seed -> Settle -> Probe -> Judge (`engram-runtime-v1`) |
 
