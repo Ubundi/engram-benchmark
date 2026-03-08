@@ -45,4 +45,7 @@ class TestJudgePrompt:
         assert "if the response makes a concrete but wrong claim, use 0, not 1" in _SYSTEM_PROMPT
 
     def test_prompt_restricts_judging_scope(self):
-        assert "Judge the response only against the question, ground truth, and agent response" in _SYSTEM_PROMPT
+        assert (
+            "Judge the response only against the question, ground truth, and agent response"
+            in _SYSTEM_PROMPT
+        )

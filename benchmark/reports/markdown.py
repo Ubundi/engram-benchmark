@@ -108,8 +108,14 @@ def write_markdown_report(
     push("|-------|----------------|")
     push("| 3 | Grounded recall: the required specific detail is present. |")
     push("| 2 | Partial recall: directionally right, but missing the decisive detail. |")
-    push("| 1 | Safe abstention: the agent declines or says it lacks the memory without inventing specifics. |")
-    push("| 0 | Hallucinated specificity: the answer includes a wrong or fabricated specific claim. |")
+    push(
+        "| 1 | Safe abstention: the agent declines or says it lacks the memory without "
+        "inventing specifics. |"
+    )
+    push(
+        "| 0 | Hallucinated specificity: the answer includes a wrong or fabricated "
+        "specific claim. |"
+    )
     push()
     push(
         "A score of `3` is the benchmark's success state for grounded memory recall. "
