@@ -16,15 +16,11 @@ logger = logging.getLogger(__name__)
 # Valid condition labels (matches V2)
 VALID_CONDITIONS = ("baseline", "clawvault", "cortex")
 
-# Unhealthy signals for cortex preflight (matches V2)
-_UNHEALTHY_SIGNALS = (
-    "cortex status check failed",
-    "memory search failed",
-    "cortex offline",
-    "api unreachable",
-    "__openclaw_api_key__",
-    "unknown command",
-)
+# Required health checks in ``openclaw cortex status`` output
+_REQUIRED_STATUS_CHECKS = ("API Health:", "Knowledge:")
+
+# Failure signals in ``openclaw cortex status`` output
+_STATUS_FAILURE_SIGNALS = ("FAIL", "ERROR", "unreachable", "unknown command")
 
 
 class OpenClawCLIAdapter(BaseAdapter):
@@ -198,42 +194,60 @@ class OpenClawCLIAdapter(BaseAdapter):
     # ------------------------------------------------------------------
 
     def run_preflight(self) -> None:
-        """Check Cortex integration by sending /memories to the agent.
+        """Check Cortex integration via ``openclaw cortex status``.
 
-        Raises RuntimeError if the agent lacks Cortex tools or reports
-        unhealthy status. Only meaningful when condition == 'cortex'.
+        Raises RuntimeError if the Cortex plugin is not installed, the
+        API is unreachable, or any health check reports failure.
+        Only meaningful when condition == 'cortex'.
         """
-        logger.info("preflight: checking Cortex integration via /memories")
-        session_id = f"benchmark-preflight-cortex-{int(time.time())}"
-        check = self._call("/memories", session_id=session_id)
+        logger.info("preflight: checking Cortex integration via CLI")
+        args = ["openclaw", "cortex", "status"]
 
-        if check.get("error"):
+        try:
+            proc = subprocess.run(
+                args,
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+        except FileNotFoundError as exc:
             raise RuntimeError(
-                f"Cortex preflight failed: could not run /memories ({check['error']})"
+                "Cortex preflight failed: openclaw executable not found on PATH."
+            ) from exc
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(
+                "Cortex preflight failed: `openclaw cortex status` timed out after 60s."
+            ) from exc
+
+        output = (proc.stdout + "\n" + proc.stderr).strip()
+
+        # Check for basic failures (non-zero exit, unknown command)
+        if proc.returncode != 0:
+            preview = " ".join(output.split())[:300]
+            raise RuntimeError(
+                f"Cortex preflight failed: `openclaw cortex status` exited "
+                f"with code {proc.returncode}. Output: {preview}"
             )
 
-        response = (check.get("response") or "").strip()
-        tool_names = check.get("tool_names", [])
-        has_search = "cortex_search_memory" in tool_names
-        has_save = "cortex_save_memory" in tool_names
-
-        if not has_search or not has_save:
-            raise RuntimeError(
-                f"Cortex preflight failed: cortex tools not present "
-                f"(search={has_search}, save={has_save}). "
-                "The Cortex plugin is likely not installed/enabled."
-            )
-
-        resp_lower = response.lower()
-        for signal in _UNHEALTHY_SIGNALS:
-            if signal in resp_lower:
-                preview = " ".join(response.split())[:240]
+        # Verify required health checks are present and passing
+        for check in _REQUIRED_STATUS_CHECKS:
+            if check not in output:
                 raise RuntimeError(
-                    "Cortex preflight failed: /memories reported "
-                    f"unhealthy status. Preview: {preview}"
+                    f"Cortex preflight failed: '{check}' not found in status output. "
+                    "The Cortex plugin may not be installed or enabled."
                 )
 
-        logger.info("preflight: Cortex integration healthy (tools present, /memories succeeded)")
+        # Scan for failure signals
+        output_lower = output.lower()
+        for signal in _STATUS_FAILURE_SIGNALS:
+            if signal.lower() in output_lower:
+                preview = " ".join(output.split())[:300]
+                raise RuntimeError(
+                    f"Cortex preflight failed: detected '{signal}' in status output. "
+                    f"Preview: {preview}"
+                )
+
+        logger.info("preflight: Cortex integration healthy (status checks passed)")
 
     # ------------------------------------------------------------------
     # Date helpers (Engram V3 dataset)
