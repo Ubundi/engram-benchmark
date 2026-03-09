@@ -22,6 +22,10 @@ _REQUIRED_STATUS_CHECKS = ("API Health:", "Knowledge:")
 # Failure signals in ``openclaw cortex status`` output
 _STATUS_FAILURE_SIGNALS = ("FAIL", "ERROR", "unreachable", "unknown command")
 
+# Retry settings for transient failures (API overload, timeouts)
+_MAX_RETRIES = 2
+_RETRY_BACKOFF_BASE = 10  # seconds
+
 
 class OpenClawCLIAdapter(BaseAdapter):
     """Adapter that calls the OpenClaw CLI for seed and probe phases.
@@ -57,7 +61,11 @@ class OpenClawCLIAdapter(BaseAdapter):
         message: str,
         session_id: str | None = None,
     ) -> dict[str, Any]:
-        """Invoke ``openclaw agent`` and return parsed response with timing."""
+        """Invoke ``openclaw agent`` and return parsed response with timing.
+
+        Retries up to ``_MAX_RETRIES`` times on transient failures (timeouts,
+        empty responses from API overload) with exponential backoff.
+        """
         args = ["openclaw", "agent", "--message", message, "--json"]
         if self._agent_id:
             args.extend(["--agent", self._agent_id])
@@ -68,50 +76,79 @@ class OpenClawCLIAdapter(BaseAdapter):
 
         # Process timeout adds 5s buffer over the agent timeout (V2 pattern)
         process_timeout = self._timeout + 5
-        start = time.monotonic()
 
-        try:
-            proc = subprocess.run(
-                args,
-                capture_output=True,
-                text=True,
-                timeout=process_timeout,
-            )
-            duration_ms = int((time.monotonic() - start) * 1000)
-            stdout = proc.stdout.strip()
-            if not stdout:
+        for attempt in range(_MAX_RETRIES + 1):
+            start = time.monotonic()
+            try:
+                proc = subprocess.run(
+                    args,
+                    capture_output=True,
+                    text=True,
+                    timeout=process_timeout,
+                )
+                duration_ms = int((time.monotonic() - start) * 1000)
+                stdout = proc.stdout.strip()
+                if not stdout:
+                    error_msg = proc.stderr.strip() or "empty response"
+                    if attempt < _MAX_RETRIES:
+                        wait = _RETRY_BACKOFF_BASE * (2**attempt)
+                        logger.warning(
+                            "transient error (attempt %d/%d): %s — retrying in %ds",
+                            attempt + 1,
+                            _MAX_RETRIES + 1,
+                            error_msg,
+                            wait,
+                        )
+                        time.sleep(wait)
+                        continue
+                    return {
+                        "response": None,
+                        "error": error_msg,
+                        "duration_ms": duration_ms,
+                    }
+                result = self._parse_response(stdout)
+                result["duration_ms"] = duration_ms
+                return result
+            except FileNotFoundError:
+                duration_ms = int((time.monotonic() - start) * 1000)
                 return {
                     "response": None,
-                    "error": proc.stderr.strip() or "empty response",
+                    "error": (
+                        "openclaw executable not found on PATH. "
+                        "Install OpenClaw or use a different adapter."
+                    ),
                     "duration_ms": duration_ms,
                 }
-            result = self._parse_response(stdout)
-            result["duration_ms"] = duration_ms
-            return result
-        except FileNotFoundError:
-            duration_ms = int((time.monotonic() - start) * 1000)
-            return {
-                "response": None,
-                "error": (
-                    "openclaw executable not found on PATH. "
-                    "Install OpenClaw or use a different adapter."
-                ),
-                "duration_ms": duration_ms,
-            }
-        except subprocess.TimeoutExpired:
-            duration_ms = int((time.monotonic() - start) * 1000)
-            return {
-                "response": None,
-                "error": f"openclaw timed out after {process_timeout}s",
-                "duration_ms": duration_ms,
-            }
-        except Exception as exc:
-            duration_ms = int((time.monotonic() - start) * 1000)
-            return {
-                "response": None,
-                "error": str(exc),
-                "duration_ms": duration_ms,
-            }
+            except subprocess.TimeoutExpired:
+                duration_ms = int((time.monotonic() - start) * 1000)
+                if attempt < _MAX_RETRIES:
+                    wait = _RETRY_BACKOFF_BASE * (2**attempt)
+                    logger.warning(
+                        "timeout (attempt %d/%d): openclaw timed out after %ds — retrying in %ds",
+                        attempt + 1,
+                        _MAX_RETRIES + 1,
+                        process_timeout,
+                        wait,
+                    )
+                    time.sleep(wait)
+                    continue
+                return {
+                    "response": None,
+                    "error": (
+                        f"openclaw timed out after {process_timeout}s ({_MAX_RETRIES + 1} attempts)"
+                    ),
+                    "duration_ms": duration_ms,
+                }
+            except Exception as exc:
+                duration_ms = int((time.monotonic() - start) * 1000)
+                return {
+                    "response": None,
+                    "error": str(exc),
+                    "duration_ms": duration_ms,
+                }
+
+        # Should not reach here, but satisfy type checker
+        return {"response": None, "error": "max retries exhausted", "duration_ms": 0}
 
     # ------------------------------------------------------------------
     # Response parsing — mirrors V2 sendToAgent() fallback chain
