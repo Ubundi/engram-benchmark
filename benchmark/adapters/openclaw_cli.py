@@ -22,9 +22,21 @@ _REQUIRED_STATUS_CHECKS = ("API Health:", "Knowledge:")
 # Failure signals in ``openclaw cortex status`` output
 _STATUS_FAILURE_SIGNALS = ("FAIL", "ERROR", "unreachable", "unknown command")
 
-# Retry settings for transient failures (API overload, timeouts)
-_MAX_RETRIES = 2
-_RETRY_BACKOFF_BASE = 10  # seconds
+# Transient error patterns that warrant a retry (API-side, not our fault)
+_TRANSIENT_ERROR_PATTERNS = ("overloaded", "529", "rate_limit", "capacity")
+
+# Retry settings — only for transient API errors (overload, rate limit)
+_MAX_RETRIES = 3
+_RETRY_BACKOFF_BASE = 5  # seconds
+
+# Inter-turn delay to avoid burst-loading the API (seconds)
+_INTER_TURN_DELAY = 1.5
+
+
+def _is_transient_error(text: str) -> bool:
+    """Check if error text matches a known transient API error."""
+    lower = text.lower()
+    return any(p in lower for p in _TRANSIENT_ERROR_PATTERNS)
 
 
 class OpenClawCLIAdapter(BaseAdapter):
@@ -37,7 +49,7 @@ class OpenClawCLIAdapter(BaseAdapter):
     def __init__(
         self,
         agent_id: str | None = None,
-        timeout: int = 120,
+        timeout: int = 240,
         condition: str | None = None,
         flush_sessions: bool = False,
     ) -> None:
@@ -45,6 +57,7 @@ class OpenClawCLIAdapter(BaseAdapter):
         self._timeout = timeout
         self._condition = condition
         self._flush_sessions = flush_sessions
+        self._call_count = 0
 
     @property
     def name(self) -> str:
@@ -63,8 +76,8 @@ class OpenClawCLIAdapter(BaseAdapter):
     ) -> dict[str, Any]:
         """Invoke ``openclaw agent`` and return parsed response with timing.
 
-        Retries up to ``_MAX_RETRIES`` times on transient failures (timeouts,
-        empty responses from API overload) with exponential backoff.
+        Retries only on transient API errors (overloaded, rate limit) with
+        short exponential backoff.  Timeouts and other errors fail immediately.
         """
         args = ["openclaw", "agent", "--message", message, "--json"]
         if self._agent_id:
@@ -77,6 +90,11 @@ class OpenClawCLIAdapter(BaseAdapter):
         # Process timeout adds 5s buffer over the agent timeout (V2 pattern)
         process_timeout = self._timeout + 5
 
+        # Inter-turn delay to smooth out API request bursts
+        if self._call_count > 0:
+            time.sleep(_INTER_TURN_DELAY)
+        self._call_count += 1
+
         for attempt in range(_MAX_RETRIES + 1):
             start = time.monotonic()
             try:
@@ -88,15 +106,18 @@ class OpenClawCLIAdapter(BaseAdapter):
                 )
                 duration_ms = int((time.monotonic() - start) * 1000)
                 stdout = proc.stdout.strip()
+                stderr = proc.stderr.strip()
+
                 if not stdout:
-                    error_msg = proc.stderr.strip() or "empty response"
-                    if attempt < _MAX_RETRIES:
+                    error_msg = stderr or "empty response"
+                    # Retry only on transient API errors
+                    if _is_transient_error(error_msg) and attempt < _MAX_RETRIES:
                         wait = _RETRY_BACKOFF_BASE * (2**attempt)
                         logger.warning(
-                            "transient error (attempt %d/%d): %s — retrying in %ds",
+                            "transient API error (attempt %d/%d): %s — retrying in %ds",
                             attempt + 1,
                             _MAX_RETRIES + 1,
-                            error_msg,
+                            error_msg[:200],
                             wait,
                         )
                         time.sleep(wait)
@@ -106,9 +127,23 @@ class OpenClawCLIAdapter(BaseAdapter):
                         "error": error_msg,
                         "duration_ms": duration_ms,
                     }
+
+                # Check if the response itself contains a transient error
+                if _is_transient_error(stdout) and attempt < _MAX_RETRIES:
+                    wait = _RETRY_BACKOFF_BASE * (2**attempt)
+                    logger.warning(
+                        "transient API error in response (attempt %d/%d) — retrying in %ds",
+                        attempt + 1,
+                        _MAX_RETRIES + 1,
+                        wait,
+                    )
+                    time.sleep(wait)
+                    continue
+
                 result = self._parse_response(stdout)
                 result["duration_ms"] = duration_ms
                 return result
+
             except FileNotFoundError:
                 duration_ms = int((time.monotonic() - start) * 1000)
                 return {
@@ -121,22 +156,9 @@ class OpenClawCLIAdapter(BaseAdapter):
                 }
             except subprocess.TimeoutExpired:
                 duration_ms = int((time.monotonic() - start) * 1000)
-                if attempt < _MAX_RETRIES:
-                    wait = _RETRY_BACKOFF_BASE * (2**attempt)
-                    logger.warning(
-                        "timeout (attempt %d/%d): openclaw timed out after %ds — retrying in %ds",
-                        attempt + 1,
-                        _MAX_RETRIES + 1,
-                        process_timeout,
-                        wait,
-                    )
-                    time.sleep(wait)
-                    continue
                 return {
                     "response": None,
-                    "error": (
-                        f"openclaw timed out after {process_timeout}s ({_MAX_RETRIES + 1} attempts)"
-                    ),
+                    "error": f"openclaw timed out after {process_timeout}s",
                     "duration_ms": duration_ms,
                 }
             except Exception as exc:
@@ -147,8 +169,12 @@ class OpenClawCLIAdapter(BaseAdapter):
                     "duration_ms": duration_ms,
                 }
 
-        # Should not reach here, but satisfy type checker
-        return {"response": None, "error": "max retries exhausted", "duration_ms": 0}
+        # All retries exhausted on transient error
+        return {
+            "response": None,
+            "error": "max retries exhausted (transient API errors)",
+            "duration_ms": 0,
+        }
 
     # ------------------------------------------------------------------
     # Response parsing — mirrors V2 sendToAgent() fallback chain
@@ -233,58 +259,65 @@ class OpenClawCLIAdapter(BaseAdapter):
     def run_preflight(self) -> None:
         """Check Cortex integration via ``openclaw cortex status``.
 
-        Raises RuntimeError if the Cortex plugin is not installed, the
-        API is unreachable, or any health check reports failure.
-        Only meaningful when condition == 'cortex'.
+        Retries up to 3 times on transient failures (e.g. AbortError on
+        Knowledge check) since the API can be briefly unstable after a reset.
         """
         logger.info("preflight: checking Cortex integration via CLI")
         args = ["openclaw", "cortex", "status"]
 
-        try:
-            proc = subprocess.run(
-                args,
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
-        except FileNotFoundError as exc:
-            raise RuntimeError(
-                "Cortex preflight failed: openclaw executable not found on PATH."
-            ) from exc
-        except subprocess.TimeoutExpired as exc:
-            raise RuntimeError(
-                "Cortex preflight failed: `openclaw cortex status` timed out after 60s."
-            ) from exc
+        last_error: str | None = None
+        for attempt in range(3):
+            if attempt > 0:
+                wait = 5 * attempt
+                logger.info("preflight: retrying in %ds (attempt %d/3)", wait, attempt + 1)
+                time.sleep(wait)
 
-        output = (proc.stdout + "\n" + proc.stderr).strip()
-
-        # Check for basic failures (non-zero exit, unknown command)
-        if proc.returncode != 0:
-            preview = " ".join(output.split())[:300]
-            raise RuntimeError(
-                f"Cortex preflight failed: `openclaw cortex status` exited "
-                f"with code {proc.returncode}. Output: {preview}"
-            )
-
-        # Verify required health checks are present and passing
-        for check in _REQUIRED_STATUS_CHECKS:
-            if check not in output:
+            try:
+                proc = subprocess.run(
+                    args,
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                )
+            except FileNotFoundError as exc:
                 raise RuntimeError(
-                    f"Cortex preflight failed: '{check}' not found in status output. "
+                    "Cortex preflight failed: openclaw executable not found on PATH."
+                ) from exc
+            except subprocess.TimeoutExpired:
+                last_error = "`openclaw cortex status` timed out after 60s"
+                continue
+
+            output = (proc.stdout + "\n" + proc.stderr).strip()
+
+            if proc.returncode != 0:
+                last_error = (
+                    f"`openclaw cortex status` exited with code {proc.returncode}. "
+                    f"Output: {' '.join(output.split())[:300]}"
+                )
+                continue
+
+            # Verify required health checks are present
+            missing = [c for c in _REQUIRED_STATUS_CHECKS if c not in output]
+            if missing:
+                raise RuntimeError(
+                    f"Cortex preflight failed: {missing} not found in status output. "
                     "The Cortex plugin may not be installed or enabled."
                 )
 
-        # Scan for failure signals
-        output_lower = output.lower()
-        for signal in _STATUS_FAILURE_SIGNALS:
-            if signal.lower() in output_lower:
-                preview = " ".join(output.split())[:300]
-                raise RuntimeError(
-                    f"Cortex preflight failed: detected '{signal}' in status output. "
-                    f"Preview: {preview}"
+            # Scan for failure signals
+            output_lower = output.lower()
+            failed_signals = [s for s in _STATUS_FAILURE_SIGNALS if s.lower() in output_lower]
+            if failed_signals:
+                last_error = (
+                    f"detected {failed_signals} in status output. "
+                    f"Preview: {' '.join(output.split())[:300]}"
                 )
+                continue
 
-        logger.info("preflight: Cortex integration healthy (status checks passed)")
+            logger.info("preflight: Cortex integration healthy (status checks passed)")
+            return
+
+        raise RuntimeError(f"Cortex preflight failed after 3 attempts: {last_error}")
 
     # ------------------------------------------------------------------
     # Date helpers (Engram V3 dataset)
