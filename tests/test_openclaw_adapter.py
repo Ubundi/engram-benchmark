@@ -93,6 +93,16 @@ def test_openclaw_adapter_parse_extracts_tool_names() -> None:
     assert "cortex_save_memory" in parsed["tool_names"]
 
 
+def test_openclaw_adapter_parse_strips_ansi_and_plugin_lines() -> None:
+    raw = (
+        "\x1b[35m[plugins]\x1b[39m \x1b[36mCortex v2.5.0 ready\x1b[39m\n"
+        "\x1b[35m[plugins]\x1b[39m \x1b[36mCortex connected\x1b[39m\n"
+        '{"result": {"payloads": [{"text": "Hello from cortex"}]}}'
+    )
+    parsed = OpenClawCLIAdapter._parse_response(raw)
+    assert parsed["response"] == "Hello from cortex"
+
+
 def test_openclaw_adapter_predict_captures_error() -> None:
     adapter = OpenClawCLIAdapter()
     task = {"id": "t1", "input": "What color?"}
@@ -234,6 +244,7 @@ def test_condition_aware_settle_defaults() -> None:
     assert _resolve_settle_seconds(None, "cortex") == 180
     assert _resolve_settle_seconds(None, "baseline") == 10
     assert _resolve_settle_seconds(None, "clawvault") == 10
+    assert _resolve_settle_seconds(None, "mem0") == 60
     assert _resolve_settle_seconds(None, None) == 120
     # Explicit override wins
     assert _resolve_settle_seconds(30, "cortex") == 30

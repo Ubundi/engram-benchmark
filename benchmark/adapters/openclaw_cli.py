@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import subprocess
 import time
 import uuid
@@ -14,7 +15,7 @@ from benchmark.adapters.base import BaseAdapter
 logger = logging.getLogger(__name__)
 
 # Valid condition labels (matches V2)
-VALID_CONDITIONS = ("baseline", "clawvault", "cortex")
+VALID_CONDITIONS = ("baseline", "clawvault", "cortex", "mem0")
 
 # Required health checks in ``openclaw cortex status`` output
 _REQUIRED_STATUS_CHECKS = ("API Health:", "Knowledge:")
@@ -190,9 +191,28 @@ class OpenClawCLIAdapter(BaseAdapter):
         3. ``parsed.message``
         4. ``parsed.response``
         5. Raw stdout
+
+        Plugin log lines (e.g. ``[plugins] Cortex v2.5.0 ready``) and ANSI
+        escape codes are stripped before JSON parsing.
         """
+        # Strip ANSI escape codes
+        ansi_re = re.compile(r"\x1b\[[0-9;]*m")
+        cleaned = ansi_re.sub("", raw)
+
+        # Strip non-JSON prefix lines (plugin banners, status lines)
+        # Find the first line that starts with '{' — that's the JSON body
+        lines = cleaned.split("\n")
+        json_start = None
+        for i, line in enumerate(lines):
+            stripped = line.lstrip()
+            if stripped.startswith("{"):
+                json_start = i
+                break
+        if json_start is not None:
+            cleaned = "\n".join(lines[json_start:])
+
         try:
-            parsed = json.loads(raw)
+            parsed = json.loads(cleaned)
         except json.JSONDecodeError:
             return {"response": raw, "raw": raw}
 
@@ -330,8 +350,6 @@ class OpenClawCLIAdapter(BaseAdapter):
         The dataset uses formats like ``"2026/02/20 (Fri) 14:43"``.
         Returns ``"2026-02-20"`` or *None* if parsing fails.
         """
-        import re
-
         match = re.match(r"(\d{4})/(\d{2})/(\d{2})", raw.strip())
         if not match:
             return None

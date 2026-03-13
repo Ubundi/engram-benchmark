@@ -31,7 +31,7 @@ from benchmark.tasks.loader import load_tasks
 from benchmark.utils.logging import configure_logging
 
 # Condition-aware settle defaults (matches V2)
-_SETTLE_DEFAULTS = {"cortex": 180, "baseline": 10, "clawvault": 10}
+_SETTLE_DEFAULTS = {"cortex": 180, "baseline": 10, "clawvault": 10, "mem0": 60}
 _SETTLE_DEFAULT_GENERIC = 120
 
 
@@ -131,7 +131,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--condition",
         default=None,
-        help=("Condition label (baseline/cortex/clawvault). Enables condition-specific behavior."),
+        help=(
+            "Condition label (baseline/cortex/clawvault/mem0). "
+            "Enables condition-specific behavior."
+        ),
     )
     parser.add_argument(
         "--flush-sessions",
