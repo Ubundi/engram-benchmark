@@ -17,15 +17,15 @@ The benchmark executes a four-phase pipeline:
 
 ```bash
 pip install engram-benchmark
-huggingface-cli login   # required to download the dataset
 ```
 
 Set environment variables:
 
 ```bash
 export JUDGE_API_KEY="sk-..."        # OpenAI-compatible key for scoring
-export HF_TOKEN="hf_..."             # HuggingFace token (or set via huggingface-cli login)
 ```
+
+The public Engram dataset can be fetched anonymously. `huggingface-cli login` or `HF_TOKEN` is optional if you want authenticated HuggingFace access for your environment.
 
 ---
 
@@ -183,6 +183,20 @@ Use this when running on an EC2 instance (or any server) with the OpenClaw CLI i
 
 - `openclaw` executable on `PATH` — verify with `openclaw --version`
 - An OpenClaw agent ID (optional if you have a default agent)
+- A separate OpenClaw agent or clean reset path for each benchmark condition you want to compare
+
+### Reference condition lineup
+
+For the OpenClaw reference track used in this repo, the main benchmark lineup is:
+
+| Condition | Runtime setup | Upstream project | Benchmark-specific behavior |
+|------|------|------|------|
+| `baseline` | OpenClaw reference runtime with no additional benchmark-specific memory augmentation | [OpenClaw](https://github.com/openclaw/openclaw) | 10s default settle |
+| `mem0` | OpenClaw with the Mem0-backed memory plugin enabled | [serenichron/openclaw-memory-mem0](https://github.com/serenichron/openclaw-memory-mem0) | 60s default settle |
+| `clawvault` | OpenClaw with ClawVault installed and integrated | [Versatly/clawvault](https://github.com/Versatly/clawvault) | 10s default settle |
+| `cortex` | OpenClaw with Cortex enabled | [Ubundi/openclaw-cortex](https://github.com/Ubundi/openclaw-cortex) | Preflight, seed-date injection, probe-date annotation, 180s default settle |
+
+Engram does not install or switch these memory systems for you. The benchmark measures the runtime configuration that is already active in the target OpenClaw agent.
 
 ### Run command
 
@@ -200,7 +214,7 @@ JUDGE_API_KEY="sk-..." python3 -m benchmark.run \
 |------|---------|-------------|
 | `--agent-id ID` | _(none)_ | OpenClaw agent ID passed to `openclaw agent --agent` |
 | `--openclaw-timeout N` | `120` | Timeout in seconds per `openclaw agent` call |
-| `--condition NAME` | _(none)_ | Condition (baseline/cortex/clawvault). Enables condition-specific behavior |
+| `--condition NAME` | _(none)_ | Condition label (baseline/mem0/clawvault/cortex). Records the evaluated memory configuration and enables condition-specific benchmark behavior where implemented |
 | `--flush-sessions` | off | Send `/new` after each seed session to trigger session-close memory hooks |
 | `--judge-concurrency N` | `4` | Parallel judge workers |
 | `--compare DIR_A DIR_B` | — | Compare two run directories offline (no agent needed) |
@@ -210,10 +224,12 @@ JUDGE_API_KEY="sk-..." python3 -m benchmark.run \
 **Seed phase:** For each haystack session, the adapter sends every user turn to the OpenClaw agent via `openclaw agent --message <msg> --json --session-id <unique-id>`. Assistant turns are skipped — the agent generates its own responses. Each session gets a unique session ID so memory boundaries are preserved. With `--flush-sessions`, a `/new` command is sent after each session to trigger session-close memory hooks.
 
 **Cortex condition:** When `--condition cortex` is set:
-- **Preflight check** — sends `/memories` to the agent to verify the Cortex plugin is installed (checks for `cortex_search_memory` and `cortex_save_memory` tools). Aborts with a clear error if the plugin is missing.
+- **Preflight check** — runs `openclaw cortex status` and validates the reported health checks before the benchmark starts. Aborts with a clear error if Cortex is missing or unhealthy.
 - **Seed date injection** — injects a narrative date context prefix into the first turn of each session, so temporal enrichment anchors `occurred_at` values correctly.
 - **Probe date annotation** — prepends a `[cortex-date: YYYY-MM-DD]` marker to every probe, so the recall handler passes the correct `reference_date` for temporal ordering.
 - **Settle default** — 180s instead of the usual 10s, to allow async Cortex ingest jobs (LLM extraction + embedding + graph build) to drain.
+
+**Mem0 and ClawVault conditions:** When `--condition mem0` or `--condition clawvault` is set, the benchmark currently changes labeling and default settle timing only. Install and verify those memory systems in OpenClaw before running the benchmark.
 
 **Probe phase:** The probe question is sent in a fresh session (new session ID) with no prior context. The adapter parses the JSON response using the same fallback chain as the V2 TypeScript runner: `result.payloads[].text` → `parsed.text` → `parsed.message` → `parsed.response` → raw stdout. Per-probe latency (in ms) is recorded in the output.
 
@@ -225,8 +241,8 @@ git clone https://github.com/Ubundi/engram-benchmark.git
 cd engram-benchmark
 pip install -e ".[dev]"
 
-# 2. Authenticate with HuggingFace
-hf auth login
+# 2. Optional: authenticate with HuggingFace for your environment
+# hf auth login
 
 # 3. Smoke test (no OpenClaw needed)
 python3 -m benchmark.run --agent local_stub --dry-run --max-tasks 3
@@ -238,21 +254,35 @@ openclaw --version
 tmux new -s bench
 JUDGE_API_KEY="sk-..." python3 -m benchmark.run \
   --agent openclaw \
-  --agent-id <id> \
+  --agent-id <baseline-id> \
   --condition baseline \
   --output-dir outputs/baseline
 
 # 6. Reset agent memory between conditions
-#    See v2/reset-agent-memory.sh for reference
+#    Or use separate OpenClaw agents/workspaces per condition
 
 # 7. Memory-augmented run (cortex auto-settles for 180s)
 JUDGE_API_KEY="sk-..." python3 -m benchmark.run \
   --agent openclaw \
-  --agent-id <id> \
+  --agent-id <cortex-id> \
   --condition cortex \
   --output-dir outputs/cortex
 
-# 8. Compare results offline
+# 8. Optional: Mem0-backed run
+JUDGE_API_KEY="sk-..." python3 -m benchmark.run \
+  --agent openclaw \
+  --agent-id <mem0-id> \
+  --condition mem0 \
+  --output-dir outputs/mem0
+
+# 9. Optional: ClawVault-backed run
+JUDGE_API_KEY="sk-..." python3 -m benchmark.run \
+  --agent openclaw \
+  --agent-id <clawvault-id> \
+  --condition clawvault \
+  --output-dir outputs/clawvault
+
+# 10. Compare results offline
 python3 -m benchmark.run \
   --agent local_stub \
   --compare outputs/baseline/<run-id> outputs/cortex/<run-id>

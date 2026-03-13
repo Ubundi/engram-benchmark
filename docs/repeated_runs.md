@@ -13,6 +13,7 @@ Use at least three full runs per main condition. Five is preferred if runtime bu
 | Condition | Minimum runs | Preferred runs | Status |
 |---|---:|---:|---|
 | `baseline` | 3 | 5 | Pending |
+| `mem0` | 3 | 5 | Pending |
 | `clawvault` | 3 | 5 | Pending |
 | `cortex` | 3 | 5 | Pending |
 
@@ -44,6 +45,10 @@ outputs/
     run-01/
     run-02/
     run-03/
+  mem0/
+    run-01/
+    run-02/
+    run-03/
   clawvault/
     run-01/
     run-02/
@@ -59,6 +64,14 @@ outputs/
 Fill one row per completed run.
 
 ### `baseline`
+
+| Run | Run directory | Agent ID | Agent version | Commit SHA | Task count | Judge model | Judge passes | Settle seconds | Mean score | Grounded rate | Hallucination rate | Abstention rate | Error count | Notes |
+|---|---|---|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---|
+| 1 | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
+| 2 | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
+| 3 | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
+
+### `mem0`
 
 | Run | Run directory | Agent ID | Agent version | Commit SHA | Task count | Judge model | Judge passes | Settle seconds | Mean score | Grounded rate | Hallucination rate | Abstention rate | Error count | Notes |
 |---|---|---|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---|
@@ -89,6 +102,7 @@ Fill this only after the per-run tables are complete.
 | Condition | N runs | Mean mean_score | SD | 95% CI | Mean grounded rate | Mean hallucination rate | Mean abstention rate | Mean error count | Included in paper |
 |---|---:|---:|---:|---|---:|---:|---:|---:|---|
 | `baseline` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
+| `mem0` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 | `clawvault` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 | `cortex` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 
@@ -110,6 +124,7 @@ Use this as the paper-facing compact version once the aggregate summary is compl
 | System or condition | Runtime family | N | Mean score | 95% CI | Grounded rate | Hallucination rate | Abstention rate |
 |---|---|---:|---:|---|---:|---:|---:|
 | `baseline` | OpenClaw | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
+| `mem0` | OpenClaw | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 | `clawvault` | OpenClaw | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 | `cortex` | OpenClaw | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` | `TBD` |
 

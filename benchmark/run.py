@@ -132,8 +132,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--condition",
         default=None,
         help=(
-            "Condition label (baseline/cortex/clawvault/mem0). "
-            "Enables condition-specific behavior."
+            "Condition label (baseline/cortex/clawvault/mem0). Enables condition-specific behavior."
         ),
     )
     parser.add_argument(

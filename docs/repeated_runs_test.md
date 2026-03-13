@@ -50,6 +50,7 @@ Do not mix these into the comparable baseline block above.
 
 ## Next blocks
 
+- `mem0`: pending 3 comparable exploratory runs if the condition is available
 - `cortex`: pending 3 comparable exploratory runs
 - `clawvault`: pending 3 comparable exploratory runs if the condition is available
 

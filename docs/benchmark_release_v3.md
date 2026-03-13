@@ -37,6 +37,7 @@ The official release keeps the benchmark's condition-aware settle defaults:
 | Condition | Official settle seconds |
 |---|---:|
 | `baseline` | 10 |
+| `mem0` | 60 |
 | `clawvault` | 10 |
 | `cortex` | 180 |
 | other / unspecified | 120 |
@@ -89,6 +90,13 @@ When publishing results for Engram v3.0, include:
 - secondary metrics: grounded rate, hallucination rate, abstention rate, per-category scores
 - run ID and git commit
 
+For the OpenClaw CLI reference track in this repo, the supported condition labels are:
+
+- `baseline`
+- `mem0`
+- `clawvault`
+- `cortex`
+
 ## Canonical command shape
 
 Baseline example:
@@ -106,6 +114,22 @@ Memory-augmented example:
 JUDGE_API_KEY="<key>" python3 -m benchmark.run \
   --agent <agent> \
   --condition cortex \
+  --split v3
+```
+
+Alternative memory-system examples:
+
+```bash
+JUDGE_API_KEY="<key>" python3 -m benchmark.run \
+  --agent <agent> \
+  --condition mem0 \
+  --split v3
+```
+
+```bash
+JUDGE_API_KEY="<key>" python3 -m benchmark.run \
+  --agent <agent> \
+  --condition clawvault \
   --split v3
 ```
 

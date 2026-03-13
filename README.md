@@ -17,7 +17,20 @@
 
 Unlike static QA or retrieval-only tests, Engram runs inside the agent runtime itself: it seeds multi-turn conversation histories, waits for memory processing to settle, then probes recall in a fresh session with no haystack in context. Whatever memory architecture the agent actually uses is what gets measured.
 
-Engram is intended to be benchmark-first and system-neutral. The benchmark defines the task format, runtime protocol, scoring rubric, and artifact requirements; systems such as OpenClaw, Cortex, or any third-party agent are evaluated against the same procedure.
+Engram is intended to be benchmark-first and system-neutral. The benchmark defines the task format, runtime protocol, scoring rubric, and artifact requirements; systems such as OpenClaw, OpenClaw memory-plugin variants, or any third-party agent are evaluated against the same procedure.
+
+## Evaluated Memory Systems
+
+The benchmark is system-neutral, but this repository currently focuses on a practical OpenClaw evaluation lineup built around one baseline runtime and three memory-system integrations:
+
+| Benchmark track | Runtime setup | Upstream project | Notes |
+|----------|----------|----------|----------|
+| `baseline` | OpenClaw reference agent with the standard benchmark workspace and no additional benchmark-specific memory augmentation | [OpenClaw](https://github.com/openclaw/openclaw) | Use this as the no-augmentation control row. In practice, teams often keep only the standard OpenClaw memory-core or session-memory path enabled here. |
+| `mem0` | OpenClaw with the Mem0-backed memory plugin enabled | [serenichron/openclaw-memory-mem0](https://github.com/serenichron/openclaw-memory-mem0) | Mem0-backed semantic memory via a self-hosted Mem0 REST API. |
+| `clawvault` | OpenClaw with ClawVault installed and wired into the runtime | [Versatly/clawvault](https://github.com/Versatly/clawvault) | Structured, local-first memory with markdown storage, graph-aware retrieval, and session lifecycle primitives. |
+| `cortex` | OpenClaw with the Cortex memory plugin enabled | [Ubundi/openclaw-cortex](https://github.com/Ubundi/openclaw-cortex) | Knowledge-graph-oriented long-term memory with auto-recall, auto-capture, and direct memory tools. |
+
+Important: Engram does not install, enable, or configure these memory systems for you. The benchmark measures whatever runtime state your agent already exposes. The `--condition` flag labels the evaluated configuration and enables benchmark-side behavior where implemented, such as Cortex preflight and date handling.
 
 ## What Engram Measures
 
@@ -230,26 +243,61 @@ tmux new -s benchmark
 
 If you get disconnected, reconnect with `tmux attach -t benchmark`.
 
-#### Step 4: Run a reference baseline
+#### Step 4: Prepare separate benchmark agents or clean resets
+
+Use a distinct OpenClaw agent or workspace per benchmark condition, or perform a verified full memory reset between runs. Reusing the same agent state across conditions will contaminate comparisons.
+
+Suggested pattern:
+
+- `baseline-agent-id`
+- `cortex-agent-id`
+- `mem0-agent-id`
+- `clawvault-agent-id`
+
+#### Step 5: Run the benchmark tracks
+
+Reference baseline:
 
 ```bash
 JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
   --agent openclaw \
-  --agent-id main \
+  --agent-id <baseline-agent-id> \
   --answer-model anthropic/claude-sonnet-4-6 \
   --condition baseline \
   --output-dir outputs/baseline
 ```
 
-#### Step 5: Run an additional condition
+Cortex:
 
 ```bash
 JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
   --agent openclaw \
-  --agent-id main \
+  --agent-id <cortex-agent-id> \
   --answer-model anthropic/claude-sonnet-4-6 \
   --condition cortex \
   --output-dir outputs/cortex
+```
+
+Mem0:
+
+```bash
+JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
+  --agent openclaw \
+  --agent-id <mem0-agent-id> \
+  --answer-model anthropic/claude-sonnet-4-6 \
+  --condition mem0 \
+  --output-dir outputs/mem0
+```
+
+ClawVault:
+
+```bash
+JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
+  --agent openclaw \
+  --agent-id <clawvault-agent-id> \
+  --answer-model anthropic/claude-sonnet-4-6 \
+  --condition clawvault \
+  --output-dir outputs/clawvault
 ```
 
 #### Step 6: Compare results
@@ -266,10 +314,10 @@ The `JUDGE_API_KEY` is an OpenAI API key used by the LLM judge (defaults to `gpt
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--condition NAME` | — | Condition (baseline/cortex/clawvault). Sets settle defaults and enables cortex features |
+| `--condition NAME` | — | Condition label (baseline/mem0/clawvault/cortex). Records the evaluated memory configuration and enables any condition-specific benchmark behavior |
 | `--agent-id ID` | — | OpenClaw agent ID (passed to `openclaw agent --agent`) |
 | `--answer-model MODEL` | — | Evaluated model used to generate answers; keep fixed across controlled comparisons |
-| `--settle-seconds N` | auto | Wait between seed and probe (cortex=180s, baseline/clawvault=10s, other=120s) |
+| `--settle-seconds N` | auto | Wait between seed and probe (cortex=180s, mem0=60s, baseline/clawvault=10s, other=120s) |
 | `--judge-passes N` | 3 | LLM judge passes per response (scores averaged) |
 | `--judge-concurrency N` | 4 | Parallel judge workers |
 | `--flush-sessions` | — | Send `/new` after each seed session to trigger memory hooks |
