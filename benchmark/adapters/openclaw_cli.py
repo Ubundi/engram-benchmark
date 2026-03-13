@@ -340,6 +340,32 @@ class OpenClawCLIAdapter(BaseAdapter):
         raise RuntimeError(f"Cortex preflight failed after 3 attempts: {last_error}")
 
     # ------------------------------------------------------------------
+    # Memory-core reindex
+    # ------------------------------------------------------------------
+
+    def reindex_memory(self) -> None:
+        """Run ``openclaw memory index`` to reindex memory-core files.
+
+        Should be called after seeding + settle so that memory files
+        written during seed sessions are searchable during probes.
+        """
+        logger.info("reindex: updating memory-core index")
+        try:
+            proc = subprocess.run(
+                ["openclaw", "memory", "index"],
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            output = proc.stdout.strip()
+            if "updated" in output.lower() or "index" in output.lower():
+                logger.info("reindex: memory-core index updated")
+            else:
+                logger.warning("reindex: unexpected output: %s", output[:200])
+        except Exception as exc:
+            logger.warning("reindex: failed (%s), continuing", exc)
+
+    # ------------------------------------------------------------------
     # Date helpers (Engram V3 dataset)
     # ------------------------------------------------------------------
 
@@ -434,6 +460,10 @@ class OpenClawCLIAdapter(BaseAdapter):
 
     def predict(self, task: dict[str, Any]) -> dict[str, Any]:
         probe_session = f"probe-{task['id']}-{uuid.uuid4().hex[:8]}"
+
+        # Start a fresh session so prior probe Q&A doesn't leak into context.
+        # ``--session-id`` alone doesn't isolate; ``/new`` forces a reset.
+        self._call("/new", session_id=probe_session)
 
         content = task["input"]
         # Cortex date annotation for temporal accuracy — uses question_date

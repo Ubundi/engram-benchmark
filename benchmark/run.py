@@ -305,6 +305,10 @@ def run_benchmark(config: RunConfig) -> dict[str, Any]:
     else:
         logger.info("phase 2: skipped")
 
+    # Reindex memory-core files so they're searchable during probes
+    if isinstance(adapter, OpenClawCLIAdapter) and not config.dry_run:
+        adapter.reindex_memory()
+
     # Phase 3: Probe
     logger.info("phase 3: probing %d tasks", len(tasks))
     predictions: list[dict[str, Any]] = []
