@@ -31,7 +31,7 @@ from benchmark.tasks.loader import load_tasks
 from benchmark.utils.logging import configure_logging
 
 # Condition-aware settle defaults (matches V2)
-_SETTLE_DEFAULTS = {"cortex": 180, "baseline": 10, "clawvault": 10, "mem0": 60}
+_SETTLE_DEFAULTS = {"cortex": 180, "baseline": 10, "clawvault": 10, "lossless-claw": 30, "mem0": 60}
 _SETTLE_DEFAULT_GENERIC = 120
 
 
@@ -114,7 +114,8 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "Wait time between seed and probe phases. "
-            "Defaults: cortex=180s, baseline/clawvault=10s, other=120s."
+            "Defaults: cortex=180s, mem0=60s, lossless-claw=30s, "
+            "baseline/clawvault=10s, other=120s."
         ),
     )
     parser.add_argument(
@@ -132,7 +133,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--condition",
         default=None,
         help=(
-            "Condition label (baseline/cortex/clawvault/mem0). Enables condition-specific behavior."
+            "Condition label (baseline/cortex/clawvault/lossless-claw/mem0). "
+            "Enables condition-specific behavior."
         ),
     )
     parser.add_argument(
@@ -267,6 +269,31 @@ def run_benchmark(config: RunConfig) -> dict[str, Any]:
         and not config.dry_run
     ):
         adapter.run_preflight()
+
+    # Ensure any workspace patches are reverted after the run,
+    # even on failure, so subsequent conditions start from clean state.
+    try:
+        return _run_benchmark_phases(
+            config,
+            logger,
+            tasks,
+            adapter,
+            git_commit,
+        )
+    finally:
+        if isinstance(adapter, OpenClawCLIAdapter):
+            adapter.restore_agents_md()
+
+
+def _run_benchmark_phases(
+    config: RunConfig,
+    logger: Any,
+    tasks: list[dict[str, Any]],
+    adapter: Any,
+    git_commit: str,
+) -> dict[str, Any]:
+    """Execute seed → settle → probe → judge phases."""
+    from benchmark.adapters.openclaw_cli import OpenClawCLIAdapter
 
     # Phase 1: Seed
     seed_turns: list[dict[str, Any]] = []

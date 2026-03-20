@@ -16,13 +16,14 @@ The current recommended OpenClaw matrix is four evaluated rows:
 | B | OpenClaw CLI | `mem0` | OpenClaw with the Mem0-backed memory plugin enabled | `--agent openclaw --condition mem0` | Adds an external semantic memory backend under the same runtime family | Must run if the condition is available in the target environment |
 | C | OpenClaw CLI | `clawvault` | OpenClaw with ClawVault integrated | `--agent openclaw --condition clawvault` | Adds a structured, local-first memory condition in the same runtime family | Must run if the condition is available in the target environment |
 | D | OpenClaw CLI | `cortex` | OpenClaw with Cortex memory enabled | `--agent openclaw --condition cortex` | Current headline augmented condition; needed for continuity with prior results | Must run |
+| E | OpenClaw CLI | `lossless-claw` | OpenClaw with Lossless-Claw context engine | `--agent openclaw --condition lossless-claw` | DAG-based lossless context (fundamentally different from semantic extraction) | Must run if the condition is available in the target environment |
 
-If all four rows are not feasible, the minimum fallback is two rows:
+If all five rows are not feasible, the minimum fallback is two rows:
 
 - `baseline`
 - `cortex`
 
-That fallback is weaker than the full matrix because it drops the extra within-family contrast provided by Mem0 and ClawVault.
+That fallback is weaker than the full matrix because it drops the extra within-family contrast provided by Mem0, ClawVault, and Lossless-Claw.
 
 ## Preferred Expansion
 
@@ -106,16 +107,37 @@ JUDGE_API_KEY="<key>" python3 -m benchmark.run \
   --output-dir outputs/cortex
 ```
 
+### Row E: OpenClaw lossless-claw
+
+- Use only if the target environment has `@martian-engineering/lossless-claw` installed.
+- Lossless-Claw replaces the default context engine with a DAG-based summarization tree. It stores all messages in SQLite and builds hierarchical summaries, allowing the agent to expand condensed context on demand.
+- Unlike Cortex/Mem0, this is primarily an in-session context management system rather than a cross-session semantic memory. The benchmark tests whether lossless context preservation improves recall compared to no augmentation.
+- Keep all benchmark settings identical to Row A except for agent identity and condition.
+- Settle time is 30s (compaction runs synchronously after each turn, but a short buffer ensures the final compaction pass completes).
+
+Command template:
+
+```bash
+JUDGE_API_KEY="<key>" python3 -m benchmark.run \
+  --agent openclaw \
+  --agent-id <lossless-claw-agent-id> \
+  --condition lossless-claw \
+  --split v3 \
+  --flush-sessions \
+  --output-dir outputs/lossless-claw
+```
+
 ## Recommended Pairing Strategy
 
 Choose conditions that let the paper isolate this effect:
 
 - within-family memory effect:
-  `baseline` vs `mem0` vs `clawvault` vs `cortex`
+  `baseline` vs `mem0` vs `clawvault` vs `lossless-claw` vs `cortex`
 
 That lineup is stronger than comparing only `baseline` vs `cortex` because it lets the paper say:
 
 - Engram detects meaningful memory differences inside one runtime family across multiple memory architectures.
+- The matrix covers both semantic extraction (Cortex, Mem0), structured vaults (ClawVault), and lossless DAG context (Lossless-Claw).
 
 ## What Counts As A Distinct Row
 

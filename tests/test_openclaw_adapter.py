@@ -244,6 +244,7 @@ def test_condition_aware_settle_defaults() -> None:
     assert _resolve_settle_seconds(None, "cortex") == 180
     assert _resolve_settle_seconds(None, "baseline") == 10
     assert _resolve_settle_seconds(None, "clawvault") == 10
+    assert _resolve_settle_seconds(None, "lossless-claw") == 30
     assert _resolve_settle_seconds(None, "mem0") == 60
     assert _resolve_settle_seconds(None, None) == 120
     # Explicit override wins

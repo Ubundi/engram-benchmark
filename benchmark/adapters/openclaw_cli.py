@@ -8,6 +8,7 @@ import re
 import subprocess
 import time
 import uuid
+from pathlib import Path
 from typing import Any
 
 from benchmark.adapters.base import BaseAdapter
@@ -15,7 +16,7 @@ from benchmark.adapters.base import BaseAdapter
 logger = logging.getLogger(__name__)
 
 # Valid condition labels (matches V2)
-VALID_CONDITIONS = ("baseline", "clawvault", "cortex", "mem0")
+VALID_CONDITIONS = ("baseline", "clawvault", "cortex", "lossless-claw", "mem0")
 
 # Required health checks in ``openclaw cortex status`` output
 _REQUIRED_STATUS_CHECKS = ("API Health:", "Knowledge:")
@@ -195,21 +196,29 @@ class OpenClawCLIAdapter(BaseAdapter):
         Plugin log lines (e.g. ``[plugins] Cortex v2.5.0 ready``) and ANSI
         escape codes are stripped before JSON parsing.
         """
-        # Strip ANSI escape codes
-        ansi_re = re.compile(r"\x1b\[[0-9;]*m")
+        # Strip ANSI escape codes (all CSI sequences, not just color)
+        ansi_re = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
         cleaned = ansi_re.sub("", raw)
 
-        # Strip non-JSON prefix lines (plugin banners, status lines)
-        # Find the first line that starts with '{' — that's the JSON body
+        # Strip non-JSON lines (plugin banners before and after the JSON body).
+        # Find the first line starting with '{' and the last line ending with
+        # '}' or ']' to bracket the JSON payload.
         lines = cleaned.split("\n")
         json_start = None
+        json_end = None
         for i, line in enumerate(lines):
             stripped = line.lstrip()
             if stripped.startswith("{"):
                 json_start = i
                 break
         if json_start is not None:
-            cleaned = "\n".join(lines[json_start:])
+            for i in range(len(lines) - 1, json_start - 1, -1):
+                stripped = lines[i].rstrip()
+                if stripped.endswith("}") or stripped.endswith("]"):
+                    json_end = i
+                    break
+            end = json_end + 1 if json_end is not None else len(lines)
+            cleaned = "\n".join(lines[json_start:end])
 
         try:
             parsed = json.loads(cleaned)
@@ -335,9 +344,62 @@ class OpenClawCLIAdapter(BaseAdapter):
                 continue
 
             logger.info("preflight: Cortex integration healthy (status checks passed)")
+            self._patch_agents_md_memory_glob()
             return
 
         raise RuntimeError(f"Cortex preflight failed after 3 attempts: {last_error}")
+
+    # ------------------------------------------------------------------
+    # Workspace patching (cortex condition)
+    # ------------------------------------------------------------------
+
+    _AGENTS_MD_PATH = Path.home() / ".openclaw" / "workspace" / "AGENTS.md"
+    _AGENTS_MD_BACKUP = Path.home() / ".openclaw" / "workspace" / ".AGENTS.md.bench-backup"
+
+    def _patch_agents_md_memory_glob(self) -> None:
+        """Patch AGENTS.md to glob memory files by date prefix.
+
+        The default AGENTS.md instructs the agent to read exact files like
+        ``memory/YYYY-MM-DD.md``, but the cortex condition creates
+        topic-specific files (e.g. ``memory/2026-03-19-arclight-setup.md``).
+        This patch changes the instruction to match all files with the date
+        prefix so the agent finds its own captured knowledge during probes.
+
+        A backup is saved so ``restore_agents_md`` can revert the change
+        after the benchmark run, avoiding cross-condition contamination.
+        """
+        if not self._AGENTS_MD_PATH.exists():
+            logger.debug("AGENTS.md not found, skipping memory glob patch")
+            return
+
+        content = self._AGENTS_MD_PATH.read_text()
+
+        old = "Read `memory/YYYY-MM-DD.md` (today + yesterday) for recent context"
+        new = (
+            "Read all files in `memory/` matching today's or yesterday's "
+            "date prefix (e.g. `memory/2026-03-19-*.md`) for recent context"
+        )
+
+        if old not in content:
+            logger.debug("AGENTS.md memory instruction already patched or not found")
+            return
+
+        # Save backup before mutating
+        self._AGENTS_MD_BACKUP.write_text(content)
+        content = content.replace(old, new)
+        self._AGENTS_MD_PATH.write_text(content)
+        logger.info("patched AGENTS.md: memory file read uses date-prefix glob")
+
+    def restore_agents_md(self) -> None:
+        """Restore AGENTS.md from the pre-benchmark backup.
+
+        Called after the run completes (success or failure) to avoid
+        leaking condition-specific patches into subsequent runs.
+        """
+        if not self._AGENTS_MD_BACKUP.exists():
+            return
+        self._AGENTS_MD_BACKUP.replace(self._AGENTS_MD_PATH)
+        logger.info("restored AGENTS.md from pre-benchmark backup")
 
     # ------------------------------------------------------------------
     # Memory-core reindex
