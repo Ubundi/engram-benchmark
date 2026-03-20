@@ -21,16 +21,17 @@ Engram is intended to be benchmark-first and system-neutral. The benchmark defin
 
 ## Evaluated Memory Systems
 
-The benchmark is system-neutral, but this repository currently focuses on a practical OpenClaw evaluation lineup built around one baseline runtime and three memory-system integrations:
+The benchmark is system-neutral, but this repository currently focuses on a practical OpenClaw evaluation lineup built around one baseline runtime and four memory-system integrations:
 
 | Benchmark track | Runtime setup | Upstream project | Notes |
 |----------|----------|----------|----------|
 | `baseline` | OpenClaw reference agent with the standard benchmark workspace and no additional benchmark-specific memory augmentation | [OpenClaw](https://github.com/openclaw/openclaw) | Use this as the no-augmentation control row. In practice, teams often keep only the standard OpenClaw memory-core or session-memory path enabled here. |
 | `mem0` | OpenClaw with the Mem0-backed memory plugin enabled | [serenichron/openclaw-memory-mem0](https://github.com/serenichron/openclaw-memory-mem0) | Mem0-backed semantic memory via a self-hosted Mem0 REST API. |
 | `clawvault` | OpenClaw with ClawVault installed and wired into the runtime | [Versatly/clawvault](https://github.com/Versatly/clawvault) | Structured, local-first memory with markdown storage, graph-aware retrieval, and session lifecycle primitives. |
+| `lossless-claw` | OpenClaw with the Lossless-Claw context engine enabled | [@martian-engineering/lossless-claw](https://www.npmjs.com/package/@martian-engineering/lossless-claw) | DAG-based lossless context compaction and expansion under the same OpenClaw runtime family. |
 | `cortex` | OpenClaw with the Cortex memory plugin enabled | [Ubundi/openclaw-cortex](https://github.com/Ubundi/openclaw-cortex) | Knowledge-graph-oriented long-term memory with auto-recall, auto-capture, and direct memory tools. |
 
-Important: Engram does not install, enable, or configure these memory systems for you. The benchmark measures whatever runtime state your agent already exposes. The `--condition` flag labels the evaluated configuration and enables benchmark-side behavior where implemented, such as Cortex preflight and date handling.
+Important: Engram does not install, enable, or configure these memory systems for you. The benchmark measures whatever runtime state your agent already exposes. The `--condition` flag labels the evaluated configuration and enables benchmark-side behavior where implemented, such as Cortex preflight/date handling and condition-aware settle defaults.
 
 ## What Engram Measures
 
@@ -112,36 +113,87 @@ The dataset is public — no authentication required.
 
 ---
 
-## Quickstart
+## Installation
 
-### 1. Install
+### Prerequisites
+
+- Python `3.10+`
+- [`uv`](https://docs.astral.sh/uv/) for environment management and repeatable installs
+- `openclaw` on `PATH` only if you plan to use `--agent openclaw`
+
+### Recommended setup
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh   # install uv if not already installed
-source $HOME/.local/bin/env                        # add uv to PATH
-uv venv && source .venv/bin/activate
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source "$HOME/.local/bin/env"
+uv sync --dev
+```
+
+This creates a local virtualenv and installs the package plus development dependencies. After that, run commands with `uv run ...`. The package also exposes a console entry point named `benchmark-run`.
+
+### Alternative editable install
+
+If you prefer an activated virtualenv workflow:
+
+```bash
+uv venv
+source .venv/bin/activate
 uv pip install -e ".[dev]"
 ```
 
-### 2. Dry run (local stub, no agent required)
+## Quickstart
+
+### 1. Dry run (full pipeline smoke test, no external agent required)
 
 ```bash
-python3 -m benchmark.run --agent local_stub
+uv run benchmark-run --agent local_stub --dry-run --max-tasks 5
 ```
 
-### 3. Run against a live agent
+Useful local helpers:
 
-Start your agent server, then point the benchmark at it:
+- `make run` runs a local-stub benchmark into `outputs/`
+- `scripts/run_dev.sh` runs the lightweight `dev` split
+- `scripts/run_test.sh` runs a tiny `test`-split smoke test
+
+### 2. Run against a live agent
+
+Start your agent server or CLI-backed runtime, then point the benchmark at it:
 
 ```bash
-JUDGE_API_KEY="<key>" python3 -m benchmark.run --agent http://localhost:8080
+JUDGE_API_KEY="<key>" uv run benchmark-run --agent http://localhost:8080
 ```
 
-Engram seeds memory sessions into the agent, waits for memory processing to settle, probes recall in a fresh session, and judges responses with an LLM.
+Engram seeds memory sessions into the agent, waits for memory processing to settle, probes recall in a fresh session, and judges responses with an LLM. If `JUDGE_API_KEY` is omitted, the run still executes but LLM judging is skipped.
+
+Supported adapter entry points today:
+
+- `local_stub` for deterministic offline smoke tests
+- `openclaw` for the OpenClaw CLI adapter
+- `http://...` or `https://...` for a custom agent server
+- `codex` and `openai` exist as scaffold stubs and are not benchmark-ready yet
 
 See [docs/integration_guide.md](docs/integration_guide.md) for the HTTP server contract, the OpenClaw CLI adapter, and a custom Python adapter option.
 
-### 4. Reference runtime: OpenClaw on EC2
+### 3. Common developer commands
+
+```bash
+make format
+make lint
+make test
+make check
+make fetch
+make fetch-test
+```
+
+### 4. Validate a finished run directory
+
+```bash
+uv run python scripts/validate_submission.py outputs/<run-id>
+```
+
+This validates the required leaderboard artifacts and checks the official-release metadata fields.
+
+### 5. Reference runtime: OpenClaw on EC2
 
 #### Prerequisite: enable systemd user services (fresh instances only)
 
@@ -219,10 +271,9 @@ rm -f ~/.openclaw/workspace/BOOTSTRAP.md
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
-source $HOME/.local/bin/env
+source "$HOME/.local/bin/env"
 git clone https://github.com/Ubundi/engram-benchmark.git && cd engram-benchmark
-uv venv && source .venv/bin/activate
-uv pip install -e ".[dev]"
+uv sync --dev
 ```
 
 #### Step 2: Dry run
@@ -230,7 +281,7 @@ uv pip install -e ".[dev]"
 Confirm everything is wired up before starting a real run:
 
 ```bash
-python3 -m benchmark.run --agent local_stub --dry-run --max-tasks 3
+uv run benchmark-run --agent local_stub --dry-run --max-tasks 3
 ```
 
 #### Step 3: Start a tmux session
@@ -253,13 +304,14 @@ Suggested pattern:
 - `cortex-agent-id`
 - `mem0-agent-id`
 - `clawvault-agent-id`
+- `lossless-claw-agent-id`
 
 #### Step 5: Run the benchmark tracks
 
 Reference baseline:
 
 ```bash
-JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
+JUDGE_API_KEY="<your-openai-key>" uv run benchmark-run \
   --agent openclaw \
   --agent-id <baseline-agent-id> \
   --answer-model anthropic/claude-sonnet-4-6 \
@@ -270,7 +322,7 @@ JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
 Cortex:
 
 ```bash
-JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
+JUDGE_API_KEY="<your-openai-key>" uv run benchmark-run \
   --agent openclaw \
   --agent-id <cortex-agent-id> \
   --answer-model anthropic/claude-sonnet-4-6 \
@@ -281,7 +333,7 @@ JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
 Mem0:
 
 ```bash
-JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
+JUDGE_API_KEY="<your-openai-key>" uv run benchmark-run \
   --agent openclaw \
   --agent-id <mem0-agent-id> \
   --answer-model anthropic/claude-sonnet-4-6 \
@@ -292,7 +344,7 @@ JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
 ClawVault:
 
 ```bash
-JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
+JUDGE_API_KEY="<your-openai-key>" uv run benchmark-run \
   --agent openclaw \
   --agent-id <clawvault-agent-id> \
   --answer-model anthropic/claude-sonnet-4-6 \
@@ -300,24 +352,36 @@ JUDGE_API_KEY="<your-openai-key>" python3 -m benchmark.run \
   --output-dir outputs/clawvault
 ```
 
+Lossless-Claw:
+
+```bash
+JUDGE_API_KEY="<your-openai-key>" uv run benchmark-run \
+  --agent openclaw \
+  --agent-id <lossless-claw-agent-id> \
+  --answer-model anthropic/claude-sonnet-4-6 \
+  --condition lossless-claw \
+  --flush-sessions \
+  --output-dir outputs/lossless-claw
+```
+
 #### Step 6: Compare results
 
 ```bash
-python3 -m benchmark.run \
+uv run benchmark-run \
   --agent local_stub \
   --compare outputs/baseline/<run-id> outputs/cortex/<run-id>
 ```
 
-The `JUDGE_API_KEY` is an OpenAI API key used by the LLM judge (defaults to `gpt-4.1-mini`). Run IDs are printed at the start of each run and visible as directory names under `outputs/`.
+The `JUDGE_API_KEY` is an OpenAI-compatible API key used by the LLM judge (defaults to `gpt-4.1-mini`). Run IDs are printed at the start of each run and visible as directory names under `outputs/`. Offline comparisons also write a Markdown report such as `comparison-baseline-vs-cortex.md` next to the compared runs.
 
 **Useful flags:**
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--condition NAME` | — | Condition label (baseline/mem0/clawvault/cortex). Records the evaluated memory configuration and enables any condition-specific benchmark behavior |
+| `--condition NAME` | — | Condition label (`baseline`, `mem0`, `clawvault`, `lossless-claw`, `cortex`). Records the evaluated memory configuration and enables any condition-specific benchmark behavior |
 | `--agent-id ID` | — | OpenClaw agent ID (passed to `openclaw agent --agent`) |
 | `--answer-model MODEL` | — | Evaluated model used to generate answers; keep fixed across controlled comparisons |
-| `--settle-seconds N` | auto | Wait between seed and probe (cortex=180s, mem0=60s, baseline/clawvault=10s, other=120s) |
+| `--settle-seconds N` | auto | Wait between seed and probe (`cortex`=180s, `mem0`=60s, `lossless-claw`=30s, `baseline`/`clawvault`=10s, other=120s) |
 | `--judge-passes N` | 3 | LLM judge passes per response (scores averaged) |
 | `--judge-concurrency N` | 4 | Parallel judge workers |
 | `--flush-sessions` | — | Send `/new` after each seed session to trigger memory hooks |
@@ -325,7 +389,7 @@ The `JUDGE_API_KEY` is an OpenAI API key used by the LLM judge (defaults to `gpt
 | `--max-tasks N` | — | Run a subset of N tasks |
 | `--judge-model` | `gpt-4.1-mini` | Judge model name |
 | `--openclaw-timeout N` | 120 | Timeout in seconds for `openclaw agent` CLI calls |
-| `--compare DIR_A DIR_B` | — | Compare two run directories offline (no agent needed) |
+| `--compare DIR_A DIR_B` | — | Compare two run directories offline and write a Markdown comparison report (still requires `--agent` because of CLI parsing) |
 
 ---
 
@@ -395,22 +459,25 @@ Each run produces `outputs/<run_id>/` containing:
 
 ---
 
+Offline comparisons write `comparison-<condition-a>-vs-<condition-b>.md` next to the compared run directories rather than inside an individual run folder.
+
+---
+
 ## Repository Structure
 
-```
-engram/
-├── benchmark/           CLI, adapters, task loader, evaluators, writers
-│   ├── tasks/           Task loading, HuggingFace fetch, schema validation
+```text
+engram-benchmark/
+├── benchmark/           CLI, adapters, task loading, judging, reports
+│   ├── tasks/           Split loading, HuggingFace fetch, schema helpers
 │   ├── adapters/        Agent adapters: local_stub, http, openclaw, openai, codex
-│   ├── evaluators/      QA, retrieval, and abstention evaluators
-│   └── judge.py         Multi-pass LLM judge (0–3 scoring)
-├── data/
-│   └── splits/          CI sample splits (*.sample.jsonl)
-├── docs/                Benchmark spec, evaluation protocol, findings, integration guide
+│   ├── evaluators/      QA, retrieval, and abstention metrics
+│   └── reports/         Run artifact writers and Markdown reports
+├── data/                Schemas, notes, and CI-safe sample splits
+├── docs/                Benchmark spec, protocol, system matrix, integration guide
 ├── leaderboard/         Submission format and leaderboard policy
 ├── outputs/             Run artifacts (gitignored)
-├── scripts/             Dataset generation pipeline
-└── tests/               Import, CLI, and schema tests
+├── scripts/             Validation and helper entry points
+└── tests/               Import, CLI, adapter, and schema tests
 ```
 
 ---
