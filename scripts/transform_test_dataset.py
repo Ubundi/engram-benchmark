@@ -10,12 +10,11 @@ Strategy:
 3. Leave already-safe turns untouched
 """
 
+import copy
+import hashlib
 import json
 import re
-import copy
 import sys
-import hashlib
-
 
 # ============================================================
 # MANUAL MAPPINGS — for complex compound sentences where regex
@@ -446,7 +445,7 @@ def transform_dataset(input_path: str, output_path: str):
     stats = {'total_turns': 0, 'changed': 0, 'unchanged': 0, 'items_affected': set()}
     changes_log = []
 
-    for item_idx, item in enumerate(transformed):
+    for _item_idx, item in enumerate(transformed):
         for sess_idx, session in enumerate(item.get('haystack_sessions', [])):
             for turn_idx, turn in enumerate(session):
                 if turn['role'] != 'user':
@@ -486,13 +485,13 @@ if __name__ == '__main__':
 
     stats, changes = transform_dataset(input_path, output_path)
 
-    print(f"\n=== Transformation Stats ===")
+    print("\n=== Transformation Stats ===")
     print(f"Total user turns: {stats['total_turns']}")
     print(f"Changed: {stats['changed']}")
     print(f"Unchanged: {stats['unchanged']}")
     print(f"Items affected: {stats['items_affected']}")
 
-    print(f"\n=== Sample Changes (first 20) ===")
+    print("\n=== Sample Changes (first 20) ===")
     for c in changes[:20]:
         print(f"\n{c['item']} S{c['session']}T{c['turn']}:")
         print(f"  BEFORE: {c['before']}")

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import subprocess
 import time
@@ -402,6 +403,42 @@ class OpenClawCLIAdapter(BaseAdapter):
         logger.info("restored AGENTS.md from pre-benchmark backup")
 
     # ------------------------------------------------------------------
+    # ClawVault observer (clawvault condition)
+    # ------------------------------------------------------------------
+
+    def _run_clawvault_observe(self) -> None:
+        """Run ``clawvault observe --cron`` to process session transcripts.
+
+        ClawVault's OpenClaw plugin hooks don't fire on gateway v2026.3.x
+        (async registration issue), so the adapter calls the observer CLI
+        directly after each session flush during seeding.
+        """
+        vault_path = os.environ.get("CLAWVAULT_PATH")
+        if not vault_path:
+            logger.warning("clawvault observe: CLAWVAULT_PATH not set, skipping")
+            return
+
+        agent_id = self._agent_id or "main"
+        args = [
+            "clawvault", "observe", "--cron",
+            "--agent", agent_id,
+            "-v", vault_path,
+            "--min-new", "1",
+        ]
+        try:
+            proc = subprocess.run(
+                args,
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            output = proc.stdout.strip()
+            if output:
+                logger.info("clawvault observe: %s", output)
+        except Exception as exc:
+            logger.warning("clawvault observe failed: %s", exc)
+
+    # ------------------------------------------------------------------
     # Memory-core reindex
     # ------------------------------------------------------------------
 
@@ -505,6 +542,11 @@ class OpenClawCLIAdapter(BaseAdapter):
             if self._flush_sessions:
                 logger.info("  session %d/%d flushing (/new)", idx + 1, len(sessions))
                 self._call("/new", session_id=session_id)
+
+                # ClawVault: run observer to process session transcripts
+                # (plugin hooks don't fire on gateway v2026.3.x)
+                if self._condition == "clawvault":
+                    self._run_clawvault_observe()
 
         meta: dict[str, Any] = {
             "seeded": True,
