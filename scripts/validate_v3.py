@@ -49,17 +49,35 @@ VALIDATION = {
 }
 
 V2_QUESTION_IDS = [
-    "oc_temporal_001", "oc_cross_agent_001", "oc_fact_recall_001",
-    "oc_temporal_002", "oc_cross_agent_002", "oc_multi_hop_001",
-    "oc_recurring_001", "oc_project_001", "oc_agent_hierarchy_001",
-    "oc_debugging_001", "oc_values_001", "oc_integration_001",
-    "oc_lesson_001", "oc_receipt_001", "oc_research_001",
-    "oc_investment_001", "oc_skill_001", "oc_self_improvement_001",
-    "oc_dashboard_001", "oc_posting_001", "oc_team_001",
-    "oc_observability_001", "oc_brian_castle_001",
-    "oc_monitoring_themes_001", "oc_claw_journal_001",
-    "oc_codexai_launch_001", "oc_channel_error_001",
-    "oc_work_paper_001", "oc_worker_model_001",
+    "oc_temporal_001",
+    "oc_cross_agent_001",
+    "oc_fact_recall_001",
+    "oc_temporal_002",
+    "oc_cross_agent_002",
+    "oc_multi_hop_001",
+    "oc_recurring_001",
+    "oc_project_001",
+    "oc_agent_hierarchy_001",
+    "oc_debugging_001",
+    "oc_values_001",
+    "oc_integration_001",
+    "oc_lesson_001",
+    "oc_receipt_001",
+    "oc_research_001",
+    "oc_investment_001",
+    "oc_skill_001",
+    "oc_self_improvement_001",
+    "oc_dashboard_001",
+    "oc_posting_001",
+    "oc_team_001",
+    "oc_observability_001",
+    "oc_brian_castle_001",
+    "oc_monitoring_themes_001",
+    "oc_claw_journal_001",
+    "oc_codexai_launch_001",
+    "oc_channel_error_001",
+    "oc_work_paper_001",
+    "oc_worker_model_001",
 ]
 
 logger = logging.getLogger(__name__)
@@ -96,16 +114,21 @@ class BenchmarkValidator:
     """Runs all 10 validation checks on the benchmark."""
 
     REQUIRED_FIELDS = [
-        "question_id", "question_type", "question", "answer",
-        "question_date", "haystack_dates", "haystack_session_ids",
-        "haystack_sessions", "answer_session_ids", "metadata",
+        "question_id",
+        "question_type",
+        "question",
+        "answer",
+        "question_date",
+        "haystack_dates",
+        "haystack_session_ids",
+        "haystack_sessions",
+        "answer_session_ids",
+        "metadata",
     ]
 
     REQUIRED_METADATA_FIELDS = ["agents_involved", "memory_type", "difficulty"]
 
-    VALID_QUESTION_TYPES = (
-        set(QUESTION_TYPE_TARGETS.keys()) | {"fact-recall"}
-    )
+    VALID_QUESTION_TYPES = set(QUESTION_TYPE_TARGETS.keys()) | {"fact-recall"}
 
     VALID_DIFFICULTIES = {"easy", "medium", "hard"}
 
@@ -254,8 +277,7 @@ class BenchmarkValidator:
 
         r.stats["ungrounded_count"] = ungrounded
         r.stats["grounded_pct"] = (
-            (len(self.data) - ungrounded) / len(self.data) * 100
-            if self.data else 0
+            (len(self.data) - ungrounded) / len(self.data) * 100 if self.data else 0
         )
         return r
 
@@ -343,9 +365,7 @@ class BenchmarkValidator:
                 )
 
         # Difficulty distribution
-        diff_counts = Counter(
-            q.get("metadata", {}).get("difficulty", "unknown") for q in self.data
-        )
+        diff_counts = Counter(q.get("metadata", {}).get("difficulty", "unknown") for q in self.data)
         r.stats["difficulty_distribution"] = dict(diff_counts)
 
         for diff, target in DIFFICULTY_TARGETS.items():
@@ -469,9 +489,7 @@ class BenchmarkValidator:
             if session_count > v["max_sessions_per_question"]:
                 r.warn(f"{qid}: {session_count} sessions (max: {v['max_sessions_per_question']})")
 
-        r.stats["avg_messages_per_session"] = (
-            sum(msg_counts) / len(msg_counts) if msg_counts else 0
-        )
+        r.stats["avg_messages_per_session"] = sum(msg_counts) / len(msg_counts) if msg_counts else 0
         r.stats["avg_answer_length"] = (
             sum(answer_lengths) / len(answer_lengths) if answer_lengths else 0
         )
@@ -519,8 +537,16 @@ class BenchmarkValidator:
 
         # Check that key entity names in answers appear in at least one session
         entity_names = [
-            "Alex", "Echo", "Beacon Studio", "CodexAI", "MemorySync",
-            "Catalyst", "engage-x", "contentway", "trustalign", "worker",
+            "Alex",
+            "Echo",
+            "Beacon Studio",
+            "CodexAI",
+            "MemorySync",
+            "Catalyst",
+            "engage-x",
+            "contentway",
+            "trustalign",
+            "worker",
             "TrustAlign",
         ]
 
@@ -539,9 +565,7 @@ class BenchmarkValidator:
             for entity in entity_names:
                 if entity.lower() in answer.lower():
                     if entity.lower() not in session_text.lower():
-                        r.warn(
-                            f"{qid}: Answer mentions '{entity}' but not found in sessions"
-                        )
+                        r.warn(f"{qid}: Answer mentions '{entity}' but not found in sessions")
                         issues += 1
 
         r.stats["entity_issues"] = issues
@@ -619,7 +643,7 @@ class BenchmarkValidator:
                 for session in q.get("haystack_sessions", []):
                     all_msg_counts.append(len(session))
             if all_msg_counts:
-                print(f"  Avg messages/session: {sum(all_msg_counts)/len(all_msg_counts):.1f}")
+                print(f"  Avg messages/session: {sum(all_msg_counts) / len(all_msg_counts):.1f}")
 
         print("\n" + "=" * 70)
         status = "ALL CHECKS PASSED" if passed == total else f"{total - passed} CHECK(S) FAILED"

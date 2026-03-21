@@ -197,19 +197,14 @@ def _check_run_metadata(run_dir: Path, result: ValidationResult) -> None:
         result.error("run_metadata.json: answer_model must match config.answer_model")
 
     if official_setting.get("split") != OFFICIAL_SPLIT:
-        result.error(
-            "run_metadata.json: official_setting.split must be "
-            f"'{OFFICIAL_SPLIT}'"
-        )
+        result.error(f"run_metadata.json: official_setting.split must be '{OFFICIAL_SPLIT}'")
     if official_setting.get("judge_model") != OFFICIAL_JUDGE_MODEL:
         result.error(
-            "run_metadata.json: official_setting.judge_model must be "
-            f"'{OFFICIAL_JUDGE_MODEL}'"
+            f"run_metadata.json: official_setting.judge_model must be '{OFFICIAL_JUDGE_MODEL}'"
         )
     if official_setting.get("judge_passes") != OFFICIAL_JUDGE_PASSES:
         result.error(
-            "run_metadata.json: official_setting.judge_passes must be "
-            f"{OFFICIAL_JUDGE_PASSES}"
+            f"run_metadata.json: official_setting.judge_passes must be {OFFICIAL_JUDGE_PASSES}"
         )
     if official_setting.get("judge_temperature") != OFFICIAL_JUDGE_TEMPERATURE:
         result.error(

@@ -420,10 +420,15 @@ class OpenClawCLIAdapter(BaseAdapter):
 
         agent_id = self._agent_id or "main"
         args = [
-            "clawvault", "observe", "--cron",
-            "--agent", agent_id,
-            "-v", vault_path,
-            "--min-new", "1",
+            "clawvault",
+            "observe",
+            "--cron",
+            "--agent",
+            agent_id,
+            "-v",
+            vault_path,
+            "--min-new",
+            "1",
         ]
         try:
             proc = subprocess.run(
