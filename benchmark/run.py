@@ -31,7 +31,14 @@ from benchmark.tasks.loader import load_tasks
 from benchmark.utils.logging import configure_logging
 
 # Condition-aware settle defaults (matches V2)
-_SETTLE_DEFAULTS = {"cortex": 180, "baseline": 10, "clawvault": 10, "lossless-claw": 30, "mem0": 60}
+_SETTLE_DEFAULTS = {
+    "cortex": 180,
+    "baseline": 10,
+    "baseline-clean": 10,
+    "clawvault": 10,
+    "lossless-claw": 30,
+    "mem0": 60,
+}
 _SETTLE_DEFAULT_GENERIC = 120
 
 
@@ -331,6 +338,15 @@ def _run_benchmark_phases(
         logger.info("phase 2: settled (%dms)", elapsed)
     else:
         logger.info("phase 2: skipped")
+
+    # baseline-clean: wipe workspace memory after seeding so probes
+    # run with no recall mechanism (true memoryless floor).
+    if (
+        isinstance(adapter, OpenClawCLIAdapter)
+        and config.condition == "baseline-clean"
+        and not config.dry_run
+    ):
+        adapter.wipe_workspace_memory()
 
     # Reindex memory-core files so they're searchable during probes
     if isinstance(adapter, OpenClawCLIAdapter) and not config.dry_run:

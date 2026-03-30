@@ -17,7 +17,7 @@ from benchmark.adapters.base import BaseAdapter
 logger = logging.getLogger(__name__)
 
 # Valid condition labels (matches V2)
-VALID_CONDITIONS = ("baseline", "clawvault", "cortex", "lossless-claw", "mem0")
+VALID_CONDITIONS = ("baseline", "baseline-clean", "clawvault", "cortex", "lossless-claw", "mem0")
 
 # Required health checks in ``openclaw cortex status`` output
 _REQUIRED_STATUS_CHECKS = ("API Health:", "Knowledge:")
@@ -442,6 +442,36 @@ class OpenClawCLIAdapter(BaseAdapter):
                 logger.info("clawvault observe: %s", output)
         except Exception as exc:
             logger.warning("clawvault observe failed: %s", exc)
+
+    # ------------------------------------------------------------------
+    # Workspace memory wipe (baseline-clean condition)
+    # ------------------------------------------------------------------
+
+    _WORKSPACE_MEMORY_DIR = Path.home() / ".openclaw" / "workspace" / "memory"
+    _WORKSPACE_MEMORY_MD = Path.home() / ".openclaw" / "workspace" / "MEMORY.md"
+
+    def wipe_workspace_memory(self) -> None:
+        """Delete workspace memory files to create a truly memoryless baseline.
+
+        The OpenClaw agent writes daily notes to ``workspace/memory/`` and
+        ``workspace/MEMORY.md`` during seeding. In the ``baseline-clean``
+        condition, these are wiped after seeding so the agent has no recall
+        mechanism during probes.
+        """
+        import shutil
+
+        wiped: list[str] = []
+        if self._WORKSPACE_MEMORY_DIR.exists():
+            shutil.rmtree(self._WORKSPACE_MEMORY_DIR)
+            wiped.append(str(self._WORKSPACE_MEMORY_DIR))
+        if self._WORKSPACE_MEMORY_MD.exists():
+            self._WORKSPACE_MEMORY_MD.unlink()
+            wiped.append(str(self._WORKSPACE_MEMORY_MD))
+
+        if wiped:
+            logger.info("baseline-clean: wiped workspace memory: %s", ", ".join(wiped))
+        else:
+            logger.info("baseline-clean: no workspace memory files found")
 
     # ------------------------------------------------------------------
     # Memory-core reindex
