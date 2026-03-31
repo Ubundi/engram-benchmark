@@ -18,7 +18,22 @@ We ran 13 benchmark runs to measure whether Cortex actually helps agents remembe
 
 Does adding Cortex to an agent make it measurably better at recalling information from prior sessions? And how does it compare to Lossless-Claw?
 
-## What we actually discovered
+## The core finding
+
+Cortex's value is in its **search tools**, not its auto-injection.
+
+The feature that brings the memory advantage is `cortex_search_memory` — the agent deciding *when* it needs to reach into long-term memory and *what* to ask for. That's what drives the +33% temporal reasoning and +27% multi-hop gains.
+
+Auto-recall (the `<cortex_memories>` prepend) tries to guess what's relevant before the agent even knows what it needs. It gets it wrong often enough — partial matches, topic-level summaries missing specifics, API errors — that it anchors the agent on bad context and suppresses the natural file-reading behaviour that actually works.
+
+The winning configuration is:
+- **Auto-capture**: on — passively stores facts after each turn. This is the ingest side, and it works.
+- **Auto-recall**: off — stop guessing what the agent needs before it asks.
+- **Tools available**: the agent reads its own notes first, then calls `cortex_search_memory` when it needs something its notes don't have.
+
+The product story is: **Cortex gives agents the ability to search their memory on demand.** Not "we inject memories before every turn" — that's the thing that was hurting. The value is a searchable, persistent knowledge store that the agent reaches into when it decides it needs to.
+
+## How we got there
 
 The benchmarking went sideways in a useful way. Three findings, in the order we hit them:
 
