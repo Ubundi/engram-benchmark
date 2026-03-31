@@ -160,14 +160,14 @@ Updated SKILL.md with recall priority reordering and graceful degradation. Auto-
 
 Set `autoRecall: false` in plugin config. Kept auto-capture on, Cortex tools available, updated SKILL.md active.
 
-**Result: 1.71** — best Cortex result. +0.18 over Phase 1 Cortex, within 0.07 of file-memory baseline.
+**Result: 1.71 and 1.69 (mean 1.70 +/- 0.014)** — validated across 2 runs. +0.17 over Phase 1 Cortex, within 0.08 of file-memory baseline.
 
-| Condition | Mean | Hit Rate | Abstain |
-|-----------|------|----------|---------|
-| **No-auto-recall** | **1.71** | **0.52** | **0.38** |
-| File-mem baseline | 1.78 | 0.52 | 0.42 |
-| Phase 1 Cortex | 1.53 | 0.44 | 0.43 |
-| Skill-fix only | 1.31 | 0.32 | 0.46 |
+| Condition | Runs | Mean | Hit Rate | Abstain |
+|-----------|------|------|----------|---------|
+| **No-auto-recall** | **2** | **1.70** | **0.52** | **0.37** |
+| File-mem baseline | 1 | 1.78 | 0.52 | 0.42 |
+| Phase 1 Cortex | 3 | 1.53 | 0.44 | 0.43 |
+| Skill-fix only | 1 | 1.31 | 0.32 | 0.46 |
 
 ### Conclusion
 
@@ -176,7 +176,7 @@ Set `autoRecall: false` in plugin config. Kept auto-capture on, Cortex tools ava
 2. Competes with file-based recall instead of supplementing it
 3. Introduces 502/503 failure modes that force abstention
 
-With auto-recall off, the agent reads daily notes naturally and uses `cortex_search_memory` on-demand. Cortex tools still add value — temporal reasoning (+0.55), recurring patterns (+0.33), and fact recall (+1.00) all score higher than file-memory-only baseline.
+With auto-recall off, the agent reads daily notes naturally and uses `cortex_search_memory` on-demand. This result is highly reproducible (stddev 0.014 vs 0.187 for auto-recall-on Cortex). Cortex tools add genuine value in temporal reasoning (+0.53), multi-hop reasoning (+0.38), and fact recall (+0.50) vs the file-memory-only baseline.
 
 ---
 

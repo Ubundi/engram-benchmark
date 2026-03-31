@@ -119,36 +119,37 @@ Updated `SKILL.md` to reorder recall priority (daily notes first, Cortex supplem
 
 **Result**: Scored **1.31** — worse than Phase 1 Cortex (1.53). The skill changes alone don't fix the problem; the auto-recall injection overrides skill instructions.
 
-### Step 3: Disable auto-recall — DONE (effective)
+### Step 3: Disable auto-recall — DONE (effective, validated)
 
 Set `autoRecall: false` in Cortex plugin config. Kept auto-capture on, Cortex tools available, updated SKILL.md active.
 
-**Result**: Scored **1.71** — best Cortex result yet.
+**Result**: Two runs scored **1.71** and **1.69** (mean **1.70 +/- 0.014**) — extremely consistent and the best Cortex configuration tested.
 
 ### Full comparison
 
-| Condition | Mean Score | Hit Rate | Abstain | vs Clean |
-|-----------|-----------|----------|---------|---------|
-| **Cortex no-auto-recall** | **1.71** | **0.52** | **0.38** | **+0.11** |
-| File-mem baseline | 1.78 | 0.52 | 0.42 | +0.18 |
-| Clean baseline | 1.60 | 0.44 | 0.44 | — |
-| Phase 1 Cortex (mean) | 1.53 | 0.44 | 0.43 | -0.07 |
-| Cortex skill-fix | 1.31 | 0.32 | 0.46 | -0.29 |
+| Condition | Runs | Mean Score | Hit Rate | Abstain | vs Clean |
+|-----------|------|-----------|----------|---------|---------|
+| File-mem baseline | 1 | 1.78 | 0.52 | 0.42 | +0.18 |
+| **Cortex no-auto-recall** | **2** | **1.70** | **0.52** | **0.37** | **+0.10** |
+| Clean baseline | 1 | 1.60 | 0.44 | 0.44 | — |
+| Phase 1 Cortex (auto-recall on) | 3 | 1.53 | 0.44 | 0.43 | -0.07 |
+| Cortex skill-fix (auto-recall on) | 1 | 1.31 | 0.32 | 0.46 | -0.29 |
 
-### Category highlights (no-auto-recall vs file-mem baseline)
+### Category highlights (no-auto-recall mean of 2 runs vs file-mem baseline)
 
 | Category | No-AR | File-Mem | Delta |
 |----------|-------|---------|-------|
-| temporal-reasoning | **2.17** | 1.62 | **+0.55** |
-| recurring-pattern | **2.33** | 2.00 | **+0.33** |
-| fact-recall | **1.50** | 0.50 | **+1.00** |
-| knowledge-update | **2.27** | 2.20 | +0.07 |
-| single-session-user | **2.00** | 1.80 | +0.20 |
-| multi-session | 0.83 | **1.88** | -1.05 |
-| single-session-assistant | 1.33 | **2.33** | -1.00 |
-| cross-agent-memory | 1.43 | **1.86** | -0.43 |
+| temporal-reasoning | **2.15** | 1.62 | **+0.53** |
+| multi-hop-reasoning | **1.81** | 1.43 | **+0.38** |
+| fact-recall | **1.00** | 0.50 | **+0.50** |
+| recurring-pattern | **1.97** | 2.00 | -0.03 |
+| cross-agent-memory | 1.79 | **1.86** | -0.07 |
+| knowledge-update | 1.73 | **2.20** | -0.47 |
+| single-session-user | 1.60 | **1.80** | -0.20 |
+| multi-session | 1.23 | **1.88** | -0.65 |
+| single-session-assistant | 1.50 | **2.33** | -0.83 |
 
-Cortex tools add significant value in temporal, recurring-pattern, and fact-recall categories. The agent loses ground in multi-session and single-session-assistant — likely because the Cortex skill's instructions cause the agent to over-think in these categories instead of just reading its notes.
+Cortex tools add genuine value in temporal reasoning, multi-hop reasoning, and fact recall — categories requiring cross-session knowledge retrieval. The agent loses ground in multi-session and single-session categories where file notes alone are sufficient and Cortex tool calls add latency and over-thinking.
 
 ### Key finding
 
@@ -157,20 +158,21 @@ Cortex tools add significant value in temporal, recurring-pattern, and fact-reca
 2. Competes with the agent's natural file-reading behaviour
 3. Introduces 502/503 failure modes that force abstention
 
-When auto-recall is disabled, the agent reads its daily notes naturally and uses `cortex_search_memory` on-demand — getting the best of both worlds.
+When auto-recall is disabled, the agent reads its daily notes naturally and uses `cortex_search_memory` on-demand — getting the best of both worlds. The result is highly reproducible (stddev 0.014 across 2 runs vs 0.187 for Phase 1 Cortex with auto-recall).
 
 ### Run artifacts
 
 - `outputs/exploratory/test/baseline-clean/2026-03-28-baseline-clean-codex-1/`
 - `outputs/exploratory/test/cortex/2026-03-29-cortex-v2.12-codex-skill-fix-1/`
 - `outputs/exploratory/test/cortex/2026-03-30-cortex-v2.12-codex-no-autorecall-1/`
+- `outputs/exploratory/test/cortex/2026-03-31-cortex-v2.12-codex-no-autorecall-2/`
 
 ### Next steps for Cortex product
 
 The auto-recall feature needs to be rethought:
-1. **Short term**: Ship with `autoRecall: false` as default for benchmark-sensitive deployments
-2. **Medium term**: Redesign auto-recall to inject memories as supplementary context *after* the agent reads its files, not before — or make it additive rather than anchoring
-3. **Long term**: Investigate why multi-session and single-session-assistant categories regress even without auto-recall — the Cortex skill instructions may still be interfering
+1. **Short term**: Ship with `autoRecall: false` as default. Cortex tools + file notes is a proven, reproducible configuration.
+2. **Medium term**: Redesign auto-recall to inject memories as supplementary context *after* the agent reads its files, not before — or make it additive rather than anchoring.
+3. **Long term**: Investigate why multi-session and single-session-assistant categories still trail the file-mem baseline even without auto-recall — the Cortex skill instructions may still cause over-thinking in simple recall tasks.
 
 ## Phase 4: Model sensitivity testing
 
