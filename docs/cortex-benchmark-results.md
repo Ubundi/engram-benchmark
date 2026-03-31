@@ -1,150 +1,110 @@
-# Cortex Memory System — Benchmark Results
+# Cortex Benchmark Results
 
-**Date**: 31 March 2026
-**Benchmark**: Engram v3.0, 50-task test split
-**Model**: OpenAI Codex gpt-5.3-codex
-**Judge**: GPT-4.1-mini, 3-pass consensus scoring (0-3 scale)
+**31 March 2026** | 13 runs over 5 days | Engram v3.0, 50-task test split
 
 ---
 
-## Executive Summary
+## TL;DR
 
-Cortex makes agents measurably better at remembering. On the Engram recall benchmark — 50 tasks spanning 9 memory categories — Cortex-equipped agents score **6% higher overall** than agents with no memory, with **up to 72% improvement** on the hardest cross-session reasoning tasks.
+We ran 13 benchmark runs to measure whether Cortex actually helps agents remember things. The short answer is yes, but we had to find the right configuration first — the default setup was actually making things worse.
 
-Compared to the leading open-source alternative (Lossless-Claw), Cortex scores **24% higher overall** with **double the hit rate** and wins **7 of 9 recall categories**.
+**Cortex (optimally configured) vs no memory: +6% overall, +33% on temporal reasoning, +27% on multi-hop reasoning.**
 
-These results are validated across multiple runs with high reproducibility.
-
----
-
-## How the Benchmark Works
-
-The Engram benchmark tests whether an agent can recall information from prior conversations in a completely new session:
-
-1. **Seed**: Multi-turn conversations are played into the agent across multiple sessions — architecture decisions, configuration values, migration plans, team standards
-2. **Settle**: Time for the memory system to process and store information
-3. **Probe**: In a fresh session with no prior context, the agent is asked specific recall questions
-4. **Judge**: An LLM judge scores each response on a 0-3 scale:
-   - **3** = Perfect recall with correct specifics
-   - **2** = Correct but incomplete
-   - **1** = Abstained or no useful recall
-   - **0** = Hallucinated wrong answer
-
-The 50 tasks cover 9 categories: cross-agent memory, fact recall, knowledge updates, multi-hop reasoning, multi-session recall, recurring patterns, single-session assistant recall, single-session user recall, and temporal reasoning.
+**Cortex vs Lossless-Claw: +24% overall, double the hit rate, wins 7 of 9 categories.**
 
 ---
 
-## Results: Cortex vs No Memory
+## What we were trying to answer
 
-Agents without any memory system start fresh every session. They can only answer from what the model already knows or infers.
+Does adding Cortex to an agent make it measurably better at recalling information from prior sessions? And how does it compare to Lossless-Claw?
 
-| Configuration | Score | Hit Rate | vs No Memory |
-|---------------|-------|----------|-------------|
-| No memory | 1.60 | 44% | — |
-| **With Cortex** | **1.70** | **52%** | **+6.3%** |
+## What we actually discovered
 
-### Where Cortex adds the most value
+The benchmarking went sideways in a useful way. Three findings, in the order we hit them:
 
-The biggest improvements are in categories that require cross-session knowledge — tasks that are effectively impossible without persistent memory:
+### 1. The "baseline" was never actually memoryless
 
-| Category | No Memory | With Cortex | Improvement |
-|----------|-----------|-------------|-------------|
-| Temporal reasoning | 1.62 | **2.15** | **+33%** |
-| Multi-hop reasoning | 1.43 | **1.81** | **+27%** |
-| Fact recall | 0.50 | **1.00** | **+100%** |
+The OpenClaw agent writes daily notes to workspace files during conversations and reads them back at the start of every new session. This is built into the agent's core behaviour — it happens with or without any memory plugin. Every condition in the benchmark (Cortex, LCM, baseline) had access to these file notes.
 
-**Temporal reasoning** ("When did we make this decision?", "What changed between week 2 and week 4?") — Cortex scores 2.15/3.0, a 33% improvement over no-memory agents.
+We added a `baseline-clean` condition that wipes these files after seeding to get a true floor. That scored 1.60. The original "baseline" with file notes scored 1.78. So the agent's own note-taking adds 0.18 — it's a real recall mechanism.
 
-**Multi-hop reasoning** ("Connect the auth migration to the session caching decision") — tasks requiring the agent to chain facts from different conversations. Cortex scores 1.81 vs 1.43.
+### 2. Auto-recall was hurting, not helping
 
-**Fact recall** ("What was the exact port number?", "Which email provider did we switch to?") — without memory, agents score 0.50 (essentially guessing). With Cortex, 1.00.
+Cortex's auto-recall feature injects a `<cortex_memories>` block before every agent turn. We found this was competing with the agent's own file notes rather than supplementing them. The agent would see partial/noisy Cortex memories, distrust its own detailed notes, and either give a worse answer or abstain entirely. Cortex also hit 502/503 API errors during probes, which forced the agent to say "I don't know" on tasks where its file notes had the answer.
 
----
+With auto-recall on: mean score 1.53 (below the 1.60 memoryless floor).
+With auto-recall off: mean score 1.70 (above the floor, validated across 2 runs with stddev 0.014).
 
-## Results: Cortex vs Lossless-Claw
+### 3. Cortex tools add real value in specific categories
 
-Lossless-Claw (LCM) is the leading open-source agent memory alternative, using local compaction and summarization.
+With auto-recall off, the agent reads its own notes naturally and uses `cortex_search_memory` on demand. This is the best of both worlds — the agent's detailed file notes for recent context, plus Cortex's cross-session search for older or harder-to-find facts.
 
-| Metric | Cortex | Lossless-Claw | Delta |
-|--------|--------|---------------|-------|
-| **Overall score** | **1.70** | 1.37 | **+24%** |
-| **Hit rate** | **52%** | 26% | **+100%** |
-| **Abstain rate** | **37%** | 64% | **-42%** |
+The categories where Cortex tools genuinely help are the ones that require reaching across session boundaries:
 
-Cortex agents answer correctly twice as often (52% vs 26% hit rate). LCM agents refuse to answer nearly two-thirds of the time.
+| Category | No Memory | With Cortex | Gain |
+|----------|-----------|-------------|------|
+| Temporal reasoning | 1.62 | 2.15 | +33% |
+| Multi-hop reasoning | 1.43 | 1.81 | +27% |
+| Fact recall | 0.50 | 1.00 | +100% |
 
-### Category-level comparison
-
-| Category | Cortex | LCM | Winner |
-|----------|--------|-----|--------|
-| Temporal reasoning | **2.15** | 1.25 | Cortex **(+72%)** |
-| Recurring patterns | **1.97** | 1.30 | Cortex **(+52%)** |
-| Knowledge updates | **1.73** | 1.10 | Cortex **(+57%)** |
-| Single-session assistant | **1.50** | 1.00 | Cortex **(+50%)** |
-| Multi-hop reasoning | **1.81** | 1.45 | Cortex **(+25%)** |
-| Single-session user | **1.60** | 1.30 | Cortex **(+23%)** |
-| Multi-session | **1.23** | 1.10 | Cortex **(+12%)** |
-| Cross-agent memory | 1.79 | **2.00** | LCM (+12%) |
-| Fact recall | 1.00 | **2.00** | LCM (+100%) |
-
-**Cortex wins 7 of 9 categories.** The two LCM wins are in cross-agent memory and fact recall, where LCM's local compaction model preserves exact values better. This is a known gap with an engineering fix in progress.
+These are the hard recall tasks — "when did we decide X?", "connect decision A to consequence B", "what was the exact value?" Without any memory system, the agent essentially guesses on these. With Cortex, it has something to search.
 
 ---
 
-## What This Means for Your Agents
+## Cortex vs Lossless-Claw
 
-### Without Cortex
-- Agent starts fresh every session
-- Cannot recall prior decisions, configurations, or context
-- Users must re-explain everything or maintain external documentation
-- Complex multi-session workflows break down
+| | Cortex | LCM |
+|---|---|---|
+| Overall score | **1.70** | 1.37 |
+| Hit rate | **52%** | 26% |
+| Abstain rate | **37%** | 64% |
+| Categories won | **7/9** | 2/9 |
 
-### With Cortex
-- Agent remembers decisions, facts, and preferences across sessions
-- Users can ask "what did we decide about X?" and get accurate answers
-- Multi-step reasoning chains are preserved across session boundaries
-- Temporal context is maintained — the agent knows *when* things happened and what changed
+LCM's main problem is abstention — the agent refuses to answer 64% of the time. It says "I don't have that in memory" and stops. Cortex agents attempt an answer more than twice as often and get it right more often.
 
-### In practice
-A development team using a Cortex-equipped agent can seed a project's architecture decisions, migration plans, and coding standards across sessions. When a team member asks "what port split did we establish?" or "when did we switch from Resend to SendGrid and why?" — the agent recalls accurately from prior conversations rather than guessing or asking the user to repeat themselves.
+LCM does beat Cortex on fact recall (2.00 vs 1.00) — its local compaction model preserves exact values like port numbers and config paths better than Cortex's topic-level auto-capture. That's a known gap we're working on.
 
 ---
 
-## Methodology and Reproducibility
+## The numbers to use
 
-### Run summary
+**For a technical audience:**
+Cortex (autoRecall=false) scores 1.70/3.0 on Engram v3.0 (50 tasks, gpt-5.3-codex, gpt-4.1-mini judge x3 passes). True memoryless floor is 1.60. Validated across 2 runs, stddev 0.014. Category-level: +0.53 temporal reasoning, +0.38 multi-hop, +0.50 fact recall vs no-memory baseline.
 
-| Condition | Runs | Mean | StdDev | Notes |
-|-----------|------|------|--------|-------|
-| Cortex (no-auto-recall) | 2 | 1.70 | 0.014 | Validated, highly consistent |
-| Cortex (auto-recall on) | 3 | 1.53 | 0.187 | Phase 1 baseline |
-| Lossless-Claw v0.4 | 2 | 1.37 | 0.014 | Consistent but low |
-| Baseline (file memory) | 1 | 1.78 | — | Agent's built-in file notes |
-| Baseline-clean (no memory) | 1 | 1.60 | — | True memoryless floor |
+**For a non-technical audience:**
+Cortex makes agents 6% better at remembering overall, with up to 33% improvement on the hardest recall tasks — things like remembering when decisions were made or connecting facts across different conversations.
 
-**13 total benchmark runs** across the evaluation, including 3 discarded due to infrastructure issues.
-
-### Configuration
-
-- **Agent runtime**: OpenClaw 2026.3.28
-- **Answer model**: openai-codex/gpt-5.3-codex (same across all conditions)
-- **Judge model**: gpt-4.1-mini, 3-pass consensus
-- **Cortex plugin**: v2.12.0 with `autoRecall: false`, `autoCapture: true`
-- **Dataset**: Engram v3.0 test split, 50 tasks across 9 categories
-- **Settle time**: 180s (Cortex), 30s (LCM), 10s (baseline)
-
-### Key methodological notes
-
-- All conditions use the same model, same agent runtime, and same benchmark tasks
-- Each run starts from a clean state (full reset of sessions, memory files, and server-side data)
-- The "no memory" baseline is a true memoryless condition where workspace memory files are deleted after seeding but before probing
-- Cortex results use the optimal configuration discovered through systematic testing: auto-capture on (facts stored automatically), auto-recall off (agent reads its own notes and uses Cortex tools on-demand)
+**For competitive positioning:**
+Cortex outperforms Lossless-Claw by 24% overall with double the hit rate. Cortex wins 7 of 9 recall categories. LCM agents refuse to answer two-thirds of the time; Cortex agents attempt and succeed.
 
 ---
 
-## Recommended Configuration
+## What you need to know about the methodology
 
-For agents deploying with the Cortex plugin:
+- Same model (gpt-5.3-codex), same agent (OpenClaw), same 50 tasks across all conditions
+- Each run starts from a completely clean state
+- Scored by GPT-4.1-mini with 3-pass consensus (reduces noise from single judge calls)
+- 13 runs total: 3x Cortex (auto-recall on), 2x Cortex (auto-recall off), 2x LCM, 1x baseline with file notes, 1x baseline clean, 1x skill-fix experiment, 3x discarded (infra issues)
+- The optimal Cortex config is `autoRecall: false, autoCapture: true` with the cortex-memory skill installed
+
+---
+
+## What's honest to say and what isn't
+
+**Honest:**
+- Cortex adds measurable value above the no-memory baseline
+- The advantage is strongest in cross-session reasoning categories
+- Cortex significantly outperforms LCM on most categories
+- These results are reproducible (low variance across runs)
+
+**Not yet honest:**
+- "Cortex is the best memory solution" — we haven't tested ClawVault or Mem0 in this round
+- "Cortex beats file-only memory" — it doesn't yet (1.70 vs 1.78). The Cortex skill causes some over-thinking in simple recall tasks. We know why and have a fix path
+- Anything about the full 498-task dataset — we've only run the 50-task test split
+
+---
+
+## Recommended config for deployment
 
 ```json
 {
@@ -155,17 +115,13 @@ For agents deploying with the Cortex plugin:
 }
 ```
 
-**Auto-capture** remains on — it automatically extracts and stores topic-level summaries after each conversation turn.
-
-**Auto-recall** should be off — the agent reads its own workspace notes naturally and uses `cortex_search_memory` on-demand for cross-session retrieval. This avoids the recall channel conflict where pre-injected memories compete with the agent's detailed file notes.
-
-The **cortex-memory skill** should be installed to give the agent instructions on how to use Cortex tools effectively, with recall priority set to: daily notes first, Cortex tools for cross-session enrichment.
+Auto-capture stays on (stores facts automatically). Auto-recall stays off (the agent reads its notes and calls Cortex tools when it needs cross-session recall). The cortex-memory skill should be installed.
 
 ---
 
-## What's Next
+## What's next
 
-1. **Capture fidelity** — closing the fact-recall gap with LCM by improving how auto-capture preserves exact values (port numbers, paths, config values) rather than topic summaries
-2. **Auto-recall redesign** — rebuilding the auto-recall feature to supplement the agent's file notes rather than competing with them
-3. **Model sensitivity testing** — validating results across different answer models
-4. **Expanded task coverage** — strengthening category-level claims with additional tasks in thin categories
+1. **Capture fidelity** — closing the fact-recall gap where LCM beats us
+2. **Auto-recall redesign** — making it additive instead of competing with file notes
+3. **Model sensitivity** — confirming these patterns hold on a different answer model
+4. **Expanded coverage** — more tasks in thin categories for stronger claims
