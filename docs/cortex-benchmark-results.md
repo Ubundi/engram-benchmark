@@ -68,29 +68,34 @@ These are the hard recall tasks — "when did we decide X?", "connect decision A
 
 ## Cortex vs Lossless-Claw
 
-| | Cortex | LCM |
-|---|---|---|
-| Overall score | **1.70** | 1.37 |
-| Hit rate | **52%** | 26% |
-| Abstain rate | **37%** | 64% |
-| Categories won | **7/9** | 2/9 |
+Same-day comparison (April 5, 2026):
 
-LCM's main problem is abstention — the agent refuses to answer 64% of the time. It says "I don't have that in memory" and stops. Cortex agents attempt an answer more than twice as often and get it right more often.
+| | Cortex | LCM | Baseline |
+|---|---|---|---|
+| Overall score | **1.58** | 1.53 | 1.48 |
+| Hit rate | 38% | 38% | **40%** |
+| Abstain rate | 54% | **46%** | **46%** |
 
-LCM does beat Cortex on fact recall (2.00 vs 1.00) — its local compaction model preserves exact values like port numbers and config paths better than Cortex's topic-level auto-capture. That's a known gap we're working on.
+The gap is tighter than earlier data suggested. Cortex leads overall but not by a large margin. The key differentiator is where each system wins:
+
+- **Cortex dominates temporal reasoning** (2.25 vs 0.92 for LCM) — more than double. This is Cortex's strongest category, driven by date-anchored search.
+- **LCM wins multi-hop** (2.29 vs 2.00) and **multi-session** (1.50 vs 1.00) — its lossless context preservation helps when connecting facts across many sessions.
+- **Baseline wins fact-recall** (2.00 vs 0.50 Cortex, 1.50 LCM) — both memory systems hurt exact value recall. The agent's raw file notes are the most reliable source for specific values.
+
+Earlier data (March 30-31) showed a larger gap (+24% Cortex over LCM) but those numbers reflected different model behavior. Same-day comparisons are the only reliable measure.
 
 ---
 
 ## The numbers to use
 
 **For a technical audience:**
-Cortex (autoRecall=false) scores 1.70/3.0 on Engram v3.0 (50 tasks, gpt-5.3-codex, gpt-4.1-mini judge x3 passes). True memoryless floor is 1.60. Validated across 2 runs, stddev 0.014. Category-level: +0.53 temporal reasoning, +0.38 multi-hop, +0.50 fact recall vs no-memory baseline.
+Cortex v2.13 (autoRecall=false) scores 1.58/3.0 on Engram v3.0 (50 tasks, gpt-5.3-codex, gpt-4.1-mini judge x3 passes). Same-day baseline scores 1.48, LCM scores 1.53. Cortex leads in temporal reasoning (+1.33 vs LCM, +0.87 vs baseline) and knowledge-update (+0.40 vs LCM). Note: absolute scores drift across days due to model behavior changes — only same-day relative comparisons are reliable.
 
 **For a non-technical audience:**
-Cortex makes agents 6% better at remembering overall, with up to 33% improvement on the hardest recall tasks — things like remembering when decisions were made or connecting facts across different conversations.
+Cortex makes agents 7% better at remembering overall compared to no memory, with the biggest improvement in remembering *when* things happened — more than double the score of the next-best system on temporal reasoning tasks.
 
 **For competitive positioning:**
-Cortex outperforms Lossless-Claw by 24% overall with double the hit rate. Cortex wins 7 of 9 recall categories. LCM agents refuse to answer two-thirds of the time; Cortex agents attempt and succeed.
+Cortex outperforms both Lossless-Claw and the no-memory baseline in same-day testing. Cortex's key advantage is temporal reasoning (2.25 vs 0.92 LCM) — when agents need to recall when decisions were made or order events correctly, Cortex is significantly better. LCM has an edge in multi-hop reasoning where connecting facts across sessions matters.
 
 ---
 

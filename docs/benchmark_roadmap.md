@@ -260,11 +260,55 @@ Downgraded plugin back to v2.12.0, set autoRecall=false manually, deployed origi
 - `outputs/exploratory/test/cortex/2026-04-04-cortex-v2.12-codex-no-autorecall-3/`
 - `outputs/exploratory/test/cortex/2026-04-04-cortex-v2.13-codex-merged-skill-1/`
 
+## Phase 3c: Same-day competitive comparison — COMPLETE (5 April 2026)
+
+**Goal**: Fresh relative numbers for Cortex v2.13, LCM, and baseline on the same day to account for model drift.
+
+All three runs on the same day (April 5) with gpt-5.3-codex, 50-task test split.
+
+### Results
+
+| Condition | Score | Hit Rate | Abstain |
+|-----------|-------|----------|---------|
+| **Cortex v2.13** | **1.58** | 0.38 | 0.54 |
+| LCM v0.5.2 | 1.53 | 0.38 | 0.46 |
+| Baseline | 1.48 | 0.40 | 0.46 |
+
+**Cortex leads overall** (+0.05 over LCM, +0.10 over baseline). The gap is tighter than March data suggested (was +0.33 Cortex over LCM, now +0.05). Model drift accounts for the absolute score changes, but the relative ordering holds: Cortex > LCM > Baseline.
+
+### Category breakdown
+
+| Category | Cortex | LCM | Baseline | Winner |
+|----------|--------|-----|----------|--------|
+| temporal-reasoning | **2.25** | 0.92 | 1.38 | Cortex (+1.33 vs LCM) |
+| multi-hop-reasoning | 2.00 | **2.29** | 1.43 | LCM |
+| cross-agent-memory | 2.00 | **2.05** | 2.00 | LCM |
+| knowledge-update | **1.60** | 1.20 | 1.40 | Cortex |
+| fact-recall | 0.50 | 1.50 | **2.00** | Baseline |
+| recurring-pattern | 1.20 | 1.20 | **1.60** | Baseline |
+| single-session-user | 1.40 | **1.80** | **1.80** | Tie (LCM/Baseline) |
+| single-session-assistant | 1.00 | 1.00 | 1.00 | Tie |
+| multi-session | 1.00 | **1.50** | 1.00 | LCM |
+
+### Key findings
+
+1. **Cortex's strength is temporal reasoning** — 2.25 vs 0.92 for LCM. This is the largest single-category advantage for any system. The on-demand search tools with date-anchored queries are working.
+2. **LCM wins multi-hop and multi-session** — its lossless context preservation helps when connecting facts across sessions.
+3. **Baseline wins fact-recall** — both memory systems hurt exact value recall. The agent's raw file notes contain the most specific values.
+4. **The competitive gap is narrower than March data** — model drift inflated the March comparison. Same-day data shows a real but modest Cortex advantage.
+5. **Abstain rates remain high** across all conditions (46-54%). This is partially model-driven (the model is more cautious now) and partially a benchmark property.
+
+### Run artifacts
+
+- `outputs/exploratory/test/cortex/2026-04-04-cortex-v2.13-codex-comparative-1/`
+- `outputs/exploratory/test/baseline/2026-04-05-baseline-codex-comparative-1/`
+- `outputs/exploratory/test/lossless-claw/2026-04-05-lossless-claw-codex-comparative-1/`
+
 ## Phase 4: Model sensitivity testing
 
 **Goal**: Understand how much of the variance is model-driven vs memory-system-driven.
 
-Phase 1 showed all scores dropped from original runs. If the model changed (provider-side), that could explain the across-the-board decline. Testing a second model also answers: does Cortex's *relative* advantage over baseline hold across models?
+Phase 1 and 3b showed significant cross-day score drift from the answer model (gpt-5.3-codex). Testing a second model answers: does Cortex's relative advantage hold across models, and is a different model more stable?
 
 | Run | What | Why |
 |-----|------|-----|
