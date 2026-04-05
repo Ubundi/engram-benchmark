@@ -174,6 +174,92 @@ The auto-recall feature needs to be rethought:
 2. **Medium term**: Redesign auto-recall to inject memories as supplementary context *after* the agent reads its files, not before — or make it additive rather than anchoring.
 3. **Long term**: Investigate why multi-session and single-session-assistant categories still trail the file-mem baseline even without auto-recall — the Cortex skill instructions may still cause over-thinking in simple recall tasks.
 
+## Phase 3b: Plugin release validation — COMPLETE (2-4 April 2026)
+
+**Goal**: Validate that the shipped plugin (v2.13.0) with all changes baked in produces the same results as the manual v2.12.0 + config overrides.
+
+### Step 4: v2.13.0 default config — DONE (regression detected)
+
+Updated EC2 to openclaw-cortex v2.13.0 (autoRecall defaults to false, new SKILL.md with FILE NOTES FIRST / SEARCH CORTEX PROACTIVELY / ANSWER FROM WHAT YOU HAVE rules, handler gate for daily notes). Ran with **no manual config overrides** — pure out-of-the-box.
+
+**Result: 1.42** — significant regression from v2.12.0 no-auto-recall (1.70). Abstain rate jumped to 48% (vs 37%). Hit rate dropped to 33% (vs 52%).
+
+| Condition | Score | Hit Rate | Abstain |
+|-----------|-------|----------|---------|
+| v2.12 no-auto-recall (manual) | **1.70** | **0.52** | **0.37** |
+| **v2.13.0 default** | **1.42** | **0.33** | **0.48** |
+
+**Root cause: Skill over-caution.** The v2.13.0 SKILL.md rules created an abstention bias:
+- 17/50 probes showed abstain-like language ("I checked memory and don't have that")
+- 7 tasks that scored 3 in v2.12 dropped to 0-1 in v2.13 — the agent had context in file notes but abstained after Cortex search returned nothing
+- Rules 2 ("SEARCH BEFORE HEDGING" → abstain gate), 5 ("PRECISION OVER CONFIDENCE" → flag gaps), and 6 ("ANSWER FROM WHAT YOU HAVE" — too weak at position 6) conflicted: the abstain/hedging rules overrode the answer-from-notes rule
+- Only 9/50 probes referenced file notes — the agent wasn't reading them enough
+
+**Category regressions vs v2.12 no-AR:**
+
+| Category | v2.13 | v2.12 no-AR | Delta |
+|----------|-------|-------------|-------|
+| temporal-reasoning | 1.38 | **2.15** | -0.77 |
+| single-session-assistant | 0.67 | **1.50** | -0.83 |
+| recurring-pattern | 1.20 | **1.97** | -0.77 |
+| knowledge-update | 1.00 | **1.73** | -0.73 |
+| multi-session | 0.86 | **1.23** | -0.37 |
+| cross-agent-memory | **2.33** | 1.79 | +0.54 |
+| single-session-user | **2.20** | 1.60 | +0.60 |
+
+### Step 5: Skill-fix v2 — DONE (not effective)
+
+Targeted changes to 4 SKILL.md rules to reduce abstention bias while keeping precision for specific values:
+
+1. **Rule 1**: "FILE NOTES FIRST" → "FILE NOTES ARE YOUR PRIMARY SOURCE"
+2. **Rule 2**: "SEARCH BEFORE HEDGING" → "SEARCH CORTEX TO SUPPLEMENT" (removed abstain gate)
+3. **Rule 5**: "PRECISION OVER CONFIDENCE" → "PRECISION FOR SPECIFIC VALUES"
+4. **Rule 6**: "ANSWER FROM WHAT YOU HAVE" → "ALWAYS ATTEMPT AN ANSWER"
+
+**Result: 1.43** — no improvement over v2.13 default (1.42). Abstain rate actually increased to 58%. Skill wording alone is not the cause.
+
+### Step 6: Isolation test — v2.13 plugin + original v2.12 SKILL.md — DONE
+
+Deployed the original v2.12.0 SKILL.md (from repo at commit 879df11) onto the server with v2.13.0 plugin code. Tests whether the v2.13 skill rewrite or the plugin code changes caused the regression.
+
+**Result: 1.52** — better than v2.13 skill variants (~1.42) but still below 1.70. Suggested the issue was partially skill, partially plugin code.
+
+### Step 7: v2.12.0 reproduction — DONE (critical finding)
+
+Downgraded plugin back to v2.12.0, set autoRecall=false manually, deployed original v2.12 SKILL.md — exact same setup that scored 1.70 on March 30-31.
+
+**Result: 1.53** — the 1.70 result is no longer reproducible.
+
+### Key finding: external drift, not plugin regression
+
+| Run | Date | Plugin | Skill | Score | Abstain |
+|-----|------|--------|-------|-------|---------|
+| v2.12 no-AR run 1 | Mar 30 | 2.12 | modified | **1.71** | 0.37 |
+| v2.12 no-AR run 2 | Mar 31 | 2.12 | modified | **1.69** | 0.37 |
+| v2.13 default | Apr 2 | 2.13 | v2.13 | 1.42 | 0.48 |
+| v2.13 skill-fix-v2 | Apr 3 | 2.13 | fixed v2 | 1.43 | 0.58 |
+| v2.13 + v2.12 skill | Apr 3 | 2.13 | v2.12 | 1.52 | 0.44 |
+| **v2.12 no-AR run 3** | **Apr 4** | **2.12** | **v2.12** | **1.53** | **0.48** |
+| v2.13 merged skill | Apr 4 | 2.13 | merged | 1.55 | 0.56 |
+
+**The v2.13 plugin code is not the cause of the regression.** The identical v2.12 setup that scored 1.70 on March 30-31 now scores 1.53 on April 4 — a 0.17 drop with no changes to the plugin, skill, or benchmark code.
+
+**Most likely cause: model behavior drift.** The answer model (gpt-5.3-codex) is served by OpenAI and may have changed provider-side between March 31 and April 2. This is the same pattern observed in Phase 1, where original single-run scores (1.95-1.99) were not reproducible at those levels in later runs. The benchmark is sensitive to model behavior changes that are outside our control.
+
+**Implications:**
+1. The v2.13 plugin changes (autoRecall default, AGENTS.md reframing, handler gate) are **not harmful** — they produce equivalent results to v2.12 when tested on the same day
+2. A merged SKILL.md (v2.13 structure + v2.12's simpler tone, 6 rules instead of 8, strong anti-abstention rule at position 2) scores on par with v2.12 original skill (1.55 vs 1.53 same-day). This is the recommended skill going forward.
+3. Absolute scores are unreliable for cross-day comparisons — only same-day relative comparisons are meaningful
+4. Phase 4 (model sensitivity testing) is now higher priority to understand how much variance is model-driven
+
+### Run artifacts
+
+- `outputs/exploratory/test/cortex/2026-04-02-cortex-v2.13-codex-default-1/`
+- `outputs/exploratory/test/cortex/2026-04-02-cortex-v2.13-codex-skill-fix-v2-1/`
+- `outputs/exploratory/test/cortex/2026-04-03-cortex-v2.13-codex-v212skill-1/`
+- `outputs/exploratory/test/cortex/2026-04-04-cortex-v2.12-codex-no-autorecall-3/`
+- `outputs/exploratory/test/cortex/2026-04-04-cortex-v2.13-codex-merged-skill-1/`
+
 ## Phase 4: Model sensitivity testing
 
 **Goal**: Understand how much of the variance is model-driven vs memory-system-driven.

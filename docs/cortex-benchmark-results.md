@@ -110,12 +110,13 @@ Cortex outperforms Lossless-Claw by 24% overall with double the hit rate. Cortex
 - Cortex adds measurable value above the no-memory baseline
 - The advantage is strongest in cross-session reasoning categories
 - Cortex significantly outperforms LCM on most categories
-- These results are reproducible (low variance across runs)
+- Same-day run pairs show low variance (stddev 0.014 on March 30-31)
 
 **Not yet honest:**
 - "Cortex is the best memory solution" — we haven't tested ClawVault or Mem0 in this round
 - "Cortex beats file-only memory" — it doesn't yet (1.70 vs 1.78). The Cortex skill causes some over-thinking in simple recall tasks. We know why and have a fix path
 - Anything about the full 498-task dataset — we've only run the 50-task test split
+- Cross-day score comparisons — the answer model (gpt-5.3-codex) drifts provider-side. The same v2.12 setup that scored 1.70 on March 30-31 scored 1.53 on April 4 with no config changes. Only same-day relative comparisons (Cortex vs baseline vs LCM) are reliable
 
 ---
 
