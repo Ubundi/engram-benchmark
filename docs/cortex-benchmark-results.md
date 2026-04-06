@@ -1,16 +1,16 @@
 # Cortex Benchmark Results
 
-**31 March 2026** | 13 runs over 5 days | Engram v3.0, 50-task test split
+**Updated 6 April 2026** | 28 runs over 12 days | Engram v3.0, 50-task test split
 
 ---
 
 ## TL;DR
 
-We ran 13 benchmark runs to measure whether Cortex actually helps agents remember things. The short answer is yes, but we had to find the right configuration first — the default setup was actually making things worse.
+Cortex makes agents measurably better at recall — but only when the skill gets out of the way. The biggest finding: **a minimal skill with no behavioral rules scored 1.76, while the full skill with 8 mandatory rules scored 1.58.** The rules were causing the agent to overthink recall instead of just answering.
 
-**Cortex (optimally configured) vs no memory: +6% overall, +33% on temporal reasoning, +27% on multi-hop reasoning.**
+**Cortex (minimal skill) vs baseline: +19% overall, 54% hit rate vs 40%, abstain rate halved (30% vs 46%).**
 
-**Cortex vs Lossless-Claw: +24% overall, double the hit rate, wins 7 of 9 categories.**
+**Cortex vs Lossless-Claw (same-day): +3% overall. Cortex dominates temporal reasoning (+143%), LCM wins multi-hop.**
 
 ---
 

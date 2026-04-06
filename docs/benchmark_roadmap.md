@@ -304,6 +304,49 @@ All three runs on the same day (April 5) with gpt-5.3-codex, 50-task test split.
 - `outputs/exploratory/test/baseline/2026-04-05-baseline-codex-comparative-1/`
 - `outputs/exploratory/test/lossless-claw/2026-04-05-lossless-claw-codex-comparative-1/`
 
+## Phase 3d: Minimal skill experiment — COMPLETE (6 April 2026)
+
+**Goal**: Test whether the skill's mandatory behavioral rules were causing the abstention problem.
+
+Replaced the 188-line skill (8 mandatory rules, search strategies, tool priority, precision guidance) with a 124-line minimal skill: just tool documentation and "use Cortex when your notes aren't enough." No mandatory behavioral rules, no search-before-answering workflow.
+
+### Results
+
+| Run | Skill | Score | Hit Rate | Abstain |
+|-----|-------|-------|----------|---------|
+| **Minimal skill** | **124 lines, no rules** | **1.76** | **0.54** | **0.30** |
+| Tool-debug (7 rules) | merged, 7 rules | 1.64 | 0.40 | 0.54 |
+| Apr 5 comparative | v2.13 repo, 8 rules | 1.58 | 0.38 | 0.54 |
+| Baseline (Apr 5) | no skill | 1.48 | 0.40 | 0.46 |
+
+### Tool usage (minimal skill)
+
+- 50/50 probes used tools (329 total calls)
+- 97 `cortex_search_memory` calls (vs 70 with rules)
+- 36 `cortex_get_memory` calls (vs 20 with rules)
+- 71 `memory_search` calls (all empty — memory-core has no files to index)
+- Agent used MORE tools but didn't over-rely on them — answered naturally when results were partial
+
+### Key finding
+
+**The mandatory behavioral rules were the primary cause of abstention.** Rules like "SEARCH BEFORE HEDGING", "PRECISION OVER CONFIDENCE", and structured tool priority workflows caused the agent to:
+1. Search tools as a prerequisite for answering (instead of answering from context)
+2. Hedge when search results were incomplete (instead of using partial context)
+3. Abstain when both tools returned nothing specific (instead of attempting from parametric knowledge)
+
+Without these rules, the agent behaves naturally — answers from context first, uses Cortex tools to supplement, and only says "I don't know" when it genuinely has nothing. The abstain rate dropped from 54% to 30% and the score jumped from 1.58 to 1.76.
+
+**The minimal skill is the recommended approach.** Tell the agent what the tools are and when they're useful. Don't tell it how to think about recall.
+
+### Also discovered
+
+Both baseline and Cortex agents write minimal daily notes during short benchmark seed sessions (3 turns). The automatic memory flush only fires before compaction, which doesn't trigger in short sessions. memory-core's `memory_search` returns empty for both conditions equally. The baseline's advantage was never from file notes — it was from not having rules that cause overthinking.
+
+### Run artifacts
+
+- `outputs/exploratory/test/cortex/2026-04-06-cortex-v2.13.1-codex-minimal-skill-1/`
+- `outputs/exploratory/test/cortex/2026-04-05-cortex-v2.13.1-codex-tool-debug-1/`
+
 ## Phase 4: Model sensitivity testing
 
 **Goal**: Understand how much of the variance is model-driven vs memory-system-driven.
