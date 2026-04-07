@@ -597,6 +597,64 @@ class OpenClawCLIAdapter(BaseAdapter):
     # Probe phase
     # ------------------------------------------------------------------
 
+    _SESSIONS_DIR = Path.home() / ".openclaw" / "agents" / "main" / "sessions"
+
+    def _extract_tool_calls(self, session_id: str) -> list[dict[str, Any]]:
+        """Parse session JSONL to extract tool calls made during a probe.
+
+        Returns a list of dicts with tool name, arguments, result summary,
+        and whether the result was empty.
+        """
+        session_file = self._SESSIONS_DIR / f"{session_id}.jsonl"
+        tool_calls: list[dict[str, Any]] = []
+        if not session_file.exists():
+            return tool_calls
+
+        pending: dict[str, dict[str, Any]] = {}
+        try:
+            with open(session_file) as f:
+                for line in f:
+                    entry = json.loads(line)
+                    msg = entry.get("message", {})
+                    role = msg.get("role")
+
+                    if role == "assistant":
+                        for block in msg.get("content", []):
+                            if block.get("type") == "toolCall":
+                                call_id = block.get("id", "")
+                                pending[call_id] = {
+                                    "tool": block.get("name", ""),
+                                    "args": block.get("arguments", {}),
+                                }
+
+                    elif role == "toolResult":
+                        call_id = msg.get("toolCallId", "")
+                        tool_name = msg.get("toolName", "")
+                        result_text = ""
+                        for block in msg.get("content", []):
+                            if block.get("type") == "text":
+                                result_text = block.get("text", "")
+
+                        info = pending.pop(call_id, {"tool": tool_name, "args": {}})
+                        result_empty = (
+                            '"results": []' in result_text
+                            or '"results":[]' in result_text
+                            or result_text.strip() == ""
+                        )
+                        tool_calls.append(
+                            {
+                                "tool": info["tool"],
+                                "args": info["args"],
+                                "result_length": len(result_text),
+                                "result_empty": result_empty,
+                                "result_preview": result_text[:200],
+                            }
+                        )
+        except Exception as exc:
+            logger.debug("failed to parse session %s: %s", session_id, exc)
+
+        return tool_calls
+
     def predict(self, task: dict[str, Any]) -> dict[str, Any]:
         probe_session = f"probe-{task['id']}-{uuid.uuid4().hex[:8]}"
 
@@ -615,9 +673,35 @@ class OpenClawCLIAdapter(BaseAdapter):
 
         result = self._call(content, session_id=probe_session)
 
+        # Extract tool call data from session JSONL for analysis
+        tool_calls = self._extract_tool_calls(probe_session)
+        tool_summary = {}
+        if tool_calls:
+            tool_summary["tool_calls"] = tool_calls
+            tool_summary["tool_count"] = len(tool_calls)
+            tool_summary["tools_used"] = list({tc["tool"] for tc in tool_calls})
+            tool_summary["cortex_search_count"] = sum(
+                1 for tc in tool_calls if tc["tool"] == "cortex_search_memory"
+            )
+            tool_summary["memory_search_count"] = sum(
+                1 for tc in tool_calls if tc["tool"] == "memory_search"
+            )
+            tool_summary["empty_results"] = sum(1 for tc in tool_calls if tc["result_empty"])
+            if tool_calls:
+                logger.info(
+                    "  tools: %s (cortex_search=%d, memory_search=%d, empty=%d/%d)",
+                    ", ".join(tool_summary["tools_used"]),
+                    tool_summary["cortex_search_count"],
+                    tool_summary["memory_search_count"],
+                    tool_summary["empty_results"],
+                    len(tool_calls),
+                )
+
         metadata: dict[str, Any] = {
             "duration_ms": result.get("duration_ms", 0),
         }
+        if tool_calls:
+            metadata["tool_usage"] = tool_summary
         if result.get("error"):
             metadata["error"] = result["error"]
         if result.get("raw"):
