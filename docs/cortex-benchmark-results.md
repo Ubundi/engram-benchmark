@@ -93,6 +93,24 @@ They trade the lead. The consistent pattern is in the categories:
 
 ---
 
+## What the plugin delivers
+
+Based on 31 benchmark runs, Cortex is a good tool that provides measurable benefits:
+
+1. **Agents recall more.** Every same-day comparison shows Cortex beating the no-memory baseline by 12-19%. This is consistent across multiple days despite answer model drift.
+
+2. **The agent uses the tools because they're useful.** 47-49 out of 50 probes use `cortex_search_memory` voluntarily — no rules force it. In the best run: 97 search calls and 36 get-memory calls across 50 probes. The agent reaches into Cortex because it finds useful context there.
+
+3. **Clear category strengths.** Cortex's on-demand search excels at multi-hop reasoning (connecting facts across sessions), recurring patterns (recognizing repeated decisions), and user-stated facts. These are the hard recall tasks where no-memory agents fail.
+
+4. **Additive, not disruptive.** Cortex doesn't replace any slot or override agent behavior. It adds searchable cross-session memory on top of whatever the agent already does. No behavior changes required — the agent naturally incorporates Cortex results into its answers.
+
+5. **Simple setup.** Default config works. Auto-recall off, auto-capture on, minimal skill. Install the plugin and it works.
+
+**Known gap:** Fact-recall (exact values like port numbers, config paths) is consistently Cortex's weakest category. Auto-capture stores topic-level summaries, not specifics. This is the single biggest product improvement opportunity.
+
+---
+
 ## The numbers to use
 
 **For a technical audience:**
