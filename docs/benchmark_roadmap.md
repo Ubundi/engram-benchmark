@@ -347,6 +347,48 @@ Both baseline and Cortex agents write minimal daily notes during short benchmark
 - `outputs/exploratory/test/cortex/2026-04-06-cortex-v2.13.1-codex-minimal-skill-1/`
 - `outputs/exploratory/test/cortex/2026-04-05-cortex-v2.13.1-codex-tool-debug-1/`
 
+## Phase 3e: Same-day competitive comparison with minimal skill — COMPLETE (6-7 April 2026)
+
+**Goal**: Fresh three-way numbers with the minimal skill shipped.
+
+### Results
+
+| Condition | Score | Hit Rate | Abstain |
+|-----------|-------|----------|---------|
+| LCM v0.5.2 | **1.74** | **0.48** | 0.44 |
+| Cortex v2.13.1 (minimal skill) | 1.55 | 0.40 | 0.44 |
+| Baseline | 1.39 | 0.28 | 0.64 |
+
+Both memory systems significantly beat baseline (+0.16 Cortex, +0.35 LCM). LCM leads Cortex by +0.19 in this run. Model drift is significant — Cortex scored 1.76 earlier on April 6 with the same skill but 1.55 in this comparative run hours later.
+
+### Category breakdown
+
+| Category | Cortex | LCM | Baseline | Winner |
+|----------|--------|-----|----------|--------|
+| multi-hop | **2.14** | 1.86 | 1.71 | Cortex |
+| single-session-user | **2.20** | 2.00 | 1.00 | Cortex |
+| recurring-pattern | **1.80** | 1.60 | 0.80 | Cortex |
+| knowledge-update | **1.40** | **1.40** | 1.20 | Tie |
+| temporal | 1.75 | **2.00** | 1.38 | LCM |
+| multi-session | 1.17 | **1.75** | 1.25 | LCM |
+| single-session-assistant | 1.00 | **2.00** | **2.00** | LCM/Baseline |
+| cross-agent | 1.14 | 1.43 | **1.76** | Baseline |
+| fact-recall | 0.50 | **1.50** | **1.50** | LCM/Baseline |
+
+### Key observations
+
+1. **Both memory systems beat baseline significantly** — the model is being more cautious today (64% baseline abstain), which makes memory tools more valuable
+2. **LCM leads overall** — its lossless context preservation wins on temporal, multi-session, and single-session categories
+3. **Cortex wins multi-hop and recurring-pattern** — on-demand search excels at connecting facts and recognizing patterns
+4. **Fact-recall remains Cortex's weakest category** (0.50) — auto-capture loses exact values that LCM's lossless approach preserves
+5. **Model drift continues to dominate** — same Cortex setup scored 1.76 and 1.55 on the same day, hours apart
+
+### Run artifacts
+
+- `outputs/exploratory/test/cortex/2026-04-06-cortex-v2.13.1-codex-comparative-2/`
+- `outputs/exploratory/test/baseline/2026-04-06-baseline-codex-comparative-2/`
+- `outputs/exploratory/test/lossless-claw/2026-04-06-lossless-claw-codex-comparative-2/`
+
 ## Phase 4: Model sensitivity testing
 
 **Goal**: Understand how much of the variance is model-driven vs memory-system-driven.
