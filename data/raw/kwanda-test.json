@@ -1,0 +1,722 @@
+[
+  {
+    "question_id": "kwanda_ops_continuity_001",
+    "question_type": "recurring-pattern",
+    "question": "What is the routine for the Monday investor update, and what was the most recent change to it?",
+    "answer": "The agent drafts the Monday investor update on Sunday evenings using prior-week metrics from the Plane dashboard. The most recent change was to also include GitHub commit volume alongside the Plane metrics.",
+    "question_date": "2026/04/06 (Mon) 09:30",
+    "haystack_dates": [
+      "2026/03/16 (Mon) 08:45",
+      "2026/03/30 (Mon) 09:15"
+    ],
+    "haystack_session_ids": [
+      "k01",
+      "k02"
+    ],
+    "haystack_sessions": [
+      [
+        {
+          "role": "user",
+          "content": "I want to standardize the Monday investor update prep. Right now it's chaotic — different format every week.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Happy to take that on as a recurring routine. Suggest: I draft the update Sunday evening, you review Monday morning before the 10am send. What metrics should it include?",
+          "has_answer": false
+        },
+        {
+          "role": "user",
+          "content": "Pull last week's data from the Plane dashboard — closed tickets, cycle time, the burn-down. Keep it short, one page max.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Got it. So the routine is: every Sunday evening I'll pull prior-week Plane metrics — closed tickets, cycle time, burn-down — and draft a one-page update. You review Monday before the 10am send. I'll set this up as a standing weekly task.",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Perfect. Start this Sunday.",
+          "has_answer": false
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "The investor updates have been good. One tweak — I want you to pull GitHub commit volume too, not just Plane metrics. Investors keep asking about engineering pace and Plane tickets alone don't show it.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Makes sense — Plane shows planned work, GitHub commits show actual throughput. I'll add commit volume from the main repos to the Sunday-evening draft starting this week. Anything else, or just additive on top of the existing format?",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Just additive. Don't change the rest.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Confirmed. Sunday evening drafts now include prior-week Plane metrics plus GitHub commit volume. Same one-page format, same Monday review window.",
+          "has_answer": false
+        }
+      ]
+    ],
+    "answer_session_ids": [
+      "k01",
+      "k02"
+    ],
+    "metadata": {
+      "project": "Kwanda",
+      "source_dataset": "kwanda-phase3.json",
+      "oracle_style": "LongMemEval-like",
+      "difficulty": "medium",
+      "memory_type": "recurring_routine",
+      "agents_involved": [
+        "main"
+      ]
+    }
+  },
+  {
+    "question_id": "kwanda_work_paper_decision_001",
+    "question_type": "single-session-assistant",
+    "question": "Which Kwanda pricing tier did we decide to lead with, and why was the other tier dropped?",
+    "answer": "We decided to lead with the R2000/month agency tier and drop the R500/month entry tier. The reason was that entry-tier prospects didn't convert and consumed disproportionate support time relative to their revenue.",
+    "question_date": "2026/04/12 (Sun) 14:20",
+    "haystack_dates": [
+      "2026/04/03 (Fri) 16:00"
+    ],
+    "haystack_session_ids": [
+      "k03"
+    ],
+    "haystack_sessions": [
+      [
+        {
+          "role": "user",
+          "content": "Pricing work paper. We have two tiers in market: R500/mo entry and R2000/mo agency. I'm thinking we should consolidate.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "What's the data showing? Conversion rate, support load, revenue mix?",
+          "has_answer": false
+        },
+        {
+          "role": "user",
+          "content": "Entry tier: 40 prospects in the funnel, 3 converted in 6 months, average ticket volume per converted user is 3x the agency tier. Agency tier: 12 prospects, 8 converted, low support load.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "That's a clear signal — entry-tier prospects don't convert and the ones who do consume disproportionate support time. The economics on the R500 tier are net-negative once you factor in support cost. The recommendation is to drop the entry tier and lead with the R2000 agency tier. You stop paying support costs on a tier that doesn't generate matching revenue, and your sales motion becomes one focused conversation instead of two.",
+          "has_answer": false
+        },
+        {
+          "role": "user",
+          "content": "Agreed. So the decision is: lead with R2000/mo agency tier, drop R500/mo entry tier, reason is no conversion and disproportionate support cost. Capture that.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Captured: lead with R2000/month agency tier; drop the R500/month entry tier. Reason: entry-tier prospects didn't convert and consumed disproportionate support time relative to revenue. Effective immediately for new conversations; existing entry-tier customers stay on for now.",
+          "has_answer": true
+        }
+      ]
+    ],
+    "answer_session_ids": [
+      "k03"
+    ],
+    "metadata": {
+      "project": "Kwanda",
+      "source_dataset": "kwanda-phase3.json",
+      "oracle_style": "LongMemEval-like",
+      "difficulty": "medium",
+      "memory_type": "pricing_decision",
+      "agents_involved": [
+        "main"
+      ]
+    }
+  },
+  {
+    "question_id": "kwanda_slack_decision_001",
+    "question_type": "single-session-assistant",
+    "question": "What did we decide about Cortex self-host on the ops call, and what's the trigger to revisit?",
+    "answer": "We decided not to offer a self-host option for Cortex in v1 — managed-only. We will revisit in Q3 if customer demand for self-host surfaces.",
+    "question_date": "2026/04/15 (Wed) 10:00",
+    "haystack_dates": [
+      "2026/04/08 (Wed) 17:30"
+    ],
+    "haystack_session_ids": [
+      "k04"
+    ],
+    "haystack_sessions": [
+      [
+        {
+          "role": "user",
+          "content": "Captured from #kwanda-ops Slack thread today: 'we agreed on the call yesterday — Cortex stays managed, no self-host option for v1, revisit Q3 if customer demand shows up. Reasoning: support burden + we'd need to harden the deploy story which is not v1 scope.' Save that as a decision.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Saving the decision: Cortex v1 is managed-only, no self-host option. The reasoning is support burden plus the deploy hardening work that's out of scope for v1. The revisit trigger is Q3 if customer demand for self-host surfaces. Anything to add?",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "That's it. The Slack thread is the source of truth, link is in #kwanda-ops.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Got it — Slack thread in #kwanda-ops is the canonical reference. Decision recorded: Cortex managed-only in v1, revisit in Q3 contingent on customer demand.",
+          "has_answer": false
+        }
+      ]
+    ],
+    "answer_session_ids": [
+      "k04"
+    ],
+    "metadata": {
+      "project": "Kwanda",
+      "source_dataset": "kwanda-phase3.json",
+      "oracle_style": "LongMemEval-like",
+      "difficulty": "easy",
+      "memory_type": "product_decision",
+      "agents_involved": [
+        "main"
+      ]
+    }
+  },
+  {
+    "question_id": "kwanda_user_preference_001",
+    "question_type": "recurring-pattern",
+    "question": "What summary format does the user prefer for meeting notes, and how strict are they about it?",
+    "answer": "The user prefers a 5-bullet maximum format with action items only and no preamble. They have corrected the agent on this preference at least twice — it is a strict, repeated preference.",
+    "question_date": "2026/04/20 (Mon) 11:00",
+    "haystack_dates": [
+      "2026/03/25 (Wed) 15:00",
+      "2026/04/14 (Tue) 16:30"
+    ],
+    "haystack_session_ids": [
+      "k05",
+      "k06"
+    ],
+    "haystack_sessions": [
+      [
+        {
+          "role": "user",
+          "content": "Summarize the investor meeting we just had with Norrsken.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Today's meeting with Norrsken covered three main themes. First, we discussed Kwanda's traction over the past quarter, focusing on the R2000 agency tier and the conversion rates we've seen. The Norrsken team asked detailed questions about our retention numbers and unit economics. Second, the conversation moved to product roadmap, where we walked through the Cortex managed-memory direction and the differentiation argument. They were particularly interested in the codex/alignment angle and asked for follow-up materials. Third, we touched on team scaling — they pushed back on hiring before revenue covers the role, which aligns with our existing hiring policy. Action items from the call: send the retention deck by Friday, share the Cortex/codex roadmap memo, schedule a follow-up in two weeks.",
+          "has_answer": false
+        },
+        {
+          "role": "user",
+          "content": "Way too long. Cut it. I want 5 bullet points max, action items only, no preamble. Don't tell me 'today's meeting covered three themes' — just give me the action items.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Understood. Going forward: 5 bullets max, action items only, no preamble. Re-doing this one:\n- Send retention deck to Norrsken by Friday\n- Share Cortex/codex roadmap memo\n- Schedule follow-up in 2 weeks\n- Confirm hiring policy alignment\n- No further commitments made",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Better. Remember that for next time.",
+          "has_answer": false
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Summarize today's customer call with Tyrelife.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "We had a good conversation with Tyrelife covering their renewal terms and a few feature requests. Anna joined for the finance portion to confirm invoice handling for the upcoming quarter. Georg led the product discussion and asked about Cortex memory features that would help their internal ops team. We also discussed support response times — they want clearer SLAs documented. Action items include sending updated SLAs by end of week, drafting a Cortex feature roadmap aligned to their ops use case, and confirming the renewal price.",
+          "has_answer": false
+        },
+        {
+          "role": "user",
+          "content": "Stop. I told you before — 5 bullets, action items only, no preamble. Why am I correcting this twice?",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "You're right, my mistake. This is the second correction so I'll lock it in: format is 5 bullets max, action items only, no preamble. Always.\n- Send updated SLAs to Tyrelife by end of week\n- Draft Cortex feature roadmap for their ops use case\n- Confirm renewal pricing with Anna\n- Document support response time commitments\n- No new commitments outside of the above",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Yes. Stick to it.",
+          "has_answer": false
+        }
+      ]
+    ],
+    "answer_session_ids": [
+      "k05",
+      "k06"
+    ],
+    "metadata": {
+      "project": "Kwanda",
+      "source_dataset": "kwanda-phase3.json",
+      "oracle_style": "LongMemEval-like",
+      "difficulty": "medium",
+      "memory_type": "user_preference",
+      "agents_involved": [
+        "main"
+      ]
+    }
+  },
+  {
+    "question_id": "kwanda_cross_system_001",
+    "question_type": "multi-hop-reasoning",
+    "question": "Walk me through the Cortex-API regression incident: which commit caused it, which Plane ticket tracked the customer-facing symptom, and how was it resolved?",
+    "answer": "The regression was introduced by commit `abc123def` on the cortex-api repo. Plane ticket KWA-247 tracked the customer-facing symptom. The incident was resolved by rolling back the deploy at 22:30 SAST, coordinated in the #incidents Slack channel.",
+    "question_date": "2026/04/22 (Wed) 09:00",
+    "haystack_dates": [
+      "2026/04/18 (Sat) 21:45",
+      "2026/04/18 (Sat) 22:45"
+    ],
+    "haystack_session_ids": [
+      "k07",
+      "k08"
+    ],
+    "haystack_sessions": [
+      [
+        {
+          "role": "user",
+          "content": "We have a customer escalation. Tyrelife's ops dashboard is throwing 500s on the recall endpoint. Plane ticket KWA-247 just got opened by support.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "I'm pulling context. KWA-247 says the symptom is 500s on `/v1/recall` for tenant `tyrelife`, started about 30 minutes ago. Anything correlate on the engineering side?",
+          "has_answer": false
+        },
+        {
+          "role": "user",
+          "content": "Yes — Sipho just commented on PR #142 in the cortex-api repo, says the regression looks like it was introduced in commit abc123def from this morning's deploy. The change touched the recall pipeline.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Got it. So we have: Plane KWA-247 tracking the customer symptom on Tyrelife's recall endpoint, and commit `abc123def` on cortex-api as the suspected cause from this morning's deploy. We should escalate to #incidents now and trigger the rollback playbook before more tenants hit it.",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Doing that now.",
+          "has_answer": false
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Update on the incident — we resolved it. Rolled back the cortex-api deploy at 22:30 SAST, coordinated in #incidents. Sipho confirmed the recall endpoint is healthy on all tenants now.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Recording the resolution: cortex-api rollback executed at 22:30 SAST, coordinated in #incidents Slack channel. Recall endpoint healthy across all tenants post-rollback. KWA-247 can be marked resolved. The bad commit `abc123def` should be reverted on the main branch and a fix-forward PR opened — want me to track that as a follow-up?",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Yes track it as follow-up. Sipho will own the fix-forward.",
+          "has_answer": false
+        }
+      ]
+    ],
+    "answer_session_ids": [
+      "k07",
+      "k08"
+    ],
+    "metadata": {
+      "project": "Kwanda",
+      "source_dataset": "kwanda-phase3.json",
+      "oracle_style": "LongMemEval-like",
+      "difficulty": "hard",
+      "memory_type": "incident_resolution",
+      "agents_involved": [
+        "main"
+      ]
+    }
+  },
+  {
+    "question_id": "kwanda_customer_context_001",
+    "question_type": "single-session-user",
+    "question": "For the customer Tyrelife, who handles invoice approvals and what is their preferred channel for routine updates?",
+    "answer": "For Tyrelife, Anna handles invoice approvals (Georg is the primary contact for general communication). Tyrelife prefers async written updates over calls.",
+    "question_date": "2026/04/16 (Thu) 13:30",
+    "haystack_dates": [
+      "2026/04/02 (Thu) 11:00"
+    ],
+    "haystack_session_ids": [
+      "k09"
+    ],
+    "haystack_sessions": [
+      [
+        {
+          "role": "user",
+          "content": "Operational notes on Tyrelife customer — capture these. Two contacts: Georg is the primary for product and general comms. Anna handles all finance, including invoice approval — she's the one who actually authorizes payment, not Georg. Don't send invoices through Georg, they'll just sit.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Captured: Tyrelife has two contacts. Georg is primary for product and general comms. Anna handles finance and authorizes invoice payments — invoices must go directly to Anna, not Georg. Anything else on their preferences?",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Yes — they prefer async written updates over calls. Don't propose calls unless they ask. Email or Slack DM is fine for routine stuff.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Added: Tyrelife prefers async written updates (email or Slack DM) over calls. Default to written for routine communication; only schedule calls if they explicitly request one. So the full picture: Georg primary for product/general, Anna for invoices and finance, and async-written as the preferred update channel.",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Right. Apply that going forward.",
+          "has_answer": false
+        }
+      ]
+    ],
+    "answer_session_ids": [
+      "k09"
+    ],
+    "metadata": {
+      "project": "Kwanda",
+      "source_dataset": "kwanda-phase3.json",
+      "oracle_style": "LongMemEval-like",
+      "difficulty": "easy",
+      "memory_type": "customer_context",
+      "agents_involved": [
+        "main"
+      ]
+    }
+  },
+  {
+    "question_id": "kwanda_user_preference_002",
+    "question_type": "recurring-pattern",
+    "question": "What is the operator's preferred order for code review feedback, and what should be filtered out?",
+    "answer": "The operator prefers code review feedback ordered as: security concerns first, then performance, then style. Nits should be skipped unless they actually matter.",
+    "question_date": "2026/04/19 (Sun) 17:00",
+    "haystack_dates": [
+      "2026/04/05 (Sun) 14:30",
+      "2026/04/12 (Sun) 11:00"
+    ],
+    "haystack_session_ids": [
+      "k10",
+      "k11"
+    ],
+    "haystack_sessions": [
+      [
+        {
+          "role": "user",
+          "content": "I'm going to start sending you code review tasks. Here's how I want them: lead with security concerns first, then performance, then style. And skip nits unless they actually matter — I don't need 'consider const vs let' notes.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Locked in: code review feedback ordered security → performance → style, with nits filtered out unless materially impactful. I'll apply this to every review you send.",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "First one: review this PR for the recall pipeline rate limiter.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Reviewing.\n\nSecurity: the rate-limit key is constructed from `req.headers['x-tenant-id']` without validation — a malicious client can spoof another tenant's quota. Validate against the JWT-derived tenant ID instead.\n\nPerformance: the rate-limit check makes a Redis call on every request even for endpoints that don't need limiting (like `/v1/health`). Add a route allowlist to skip the check for known-safe endpoints.\n\nStyle: the timeout constant is hardcoded; lift it to config. (Not a nit — this affects ops ability to tune in production.)",
+          "has_answer": false
+        },
+        {
+          "role": "user",
+          "content": "Good. That's the format.",
+          "has_answer": false
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Another review — PR #156 on cortex-api, the new auto-capture filter.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Reviewing PR #156 in security → performance → style order.\n\nSecurity: the filter accepts user-supplied patterns and compiles them as regex. Untrusted input compiled to regex is a ReDoS risk — wrap it in a timeout-bounded matcher or restrict to a safe regex subset.\n\nPerformance: the filter runs synchronously in the auto-capture hot path. Even at 1ms per check, this adds 30+ms to a 30-message capture. Move to async batching.\n\nStyle: function names are inconsistent (`shouldFilter` vs `is_excluded`). Pick one casing.\n\nNits skipped per your preference.",
+          "has_answer": false
+        },
+        {
+          "role": "user",
+          "content": "Good. Keep doing exactly this.",
+          "has_answer": false
+        }
+      ]
+    ],
+    "answer_session_ids": [
+      "k10",
+      "k11"
+    ],
+    "metadata": {
+      "project": "Kwanda",
+      "source_dataset": "kwanda-phase3.json",
+      "oracle_style": "LongMemEval-like",
+      "difficulty": "medium",
+      "memory_type": "user_preference",
+      "agents_involved": [
+        "main"
+      ]
+    }
+  },
+  {
+    "question_id": "kwanda_recurring_decision_001",
+    "question_type": "knowledge-update",
+    "question": "What is Kwanda's hiring policy trigger, and how has it been applied in specific role discussions?",
+    "answer": "Kwanda's policy is to hire only after 3+ months of revenue covering the role. The policy was applied to reject hiring a customer success lead in March (revenue criterion not met) and to approve hiring a backend engineer in April once the criterion was met.",
+    "question_date": "2026/04/25 (Fri) 10:00",
+    "haystack_dates": [
+      "2026/02/20 (Fri) 09:30",
+      "2026/03/12 (Thu) 14:00",
+      "2026/04/18 (Sat) 11:00"
+    ],
+    "haystack_session_ids": [
+      "k12",
+      "k13",
+      "k14"
+    ],
+    "haystack_sessions": [
+      [
+        {
+          "role": "user",
+          "content": "Setting our hiring policy formally. Rule: we hire only after 3+ months of revenue covering the role. Not three months of pipeline, not three months of contracted ARR — actual revenue collected for three months.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Recording: Kwanda's hiring trigger is 3+ months of *collected revenue* covering the role's fully-loaded cost, not pipeline or contracted ARR. I'll apply this whenever a hiring discussion comes up.",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Yes. Strict on this.",
+          "has_answer": false
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "We're considering hiring a customer success lead. We have two enterprise customers signed and one almost-closed. Should we move?",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Applying the hiring policy: we need 3+ months of *collected* revenue covering the role's cost. Two signed customers and one almost-closed is contracted/pipeline, not collected revenue. The policy says no on this hire right now. Revisit once those contracts have generated three months of actual collections.",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Right call. Holding off.",
+          "has_answer": false
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Backend engineer hire — we've been at agency-tier MRR covering this role for over four months now. What's the policy say?",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "The hiring policy is satisfied: 4+ months of collected revenue covering the role's fully-loaded cost exceeds the 3-month threshold. This hire is approved under the policy. Different from March's customer-success lead discussion where collected revenue wasn't there yet.",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Good. Moving forward with the hire.",
+          "has_answer": false
+        }
+      ]
+    ],
+    "answer_session_ids": [
+      "k12",
+      "k13",
+      "k14"
+    ],
+    "metadata": {
+      "project": "Kwanda",
+      "source_dataset": "kwanda-phase3.json",
+      "oracle_style": "LongMemEval-like",
+      "difficulty": "hard",
+      "memory_type": "company_policy",
+      "agents_involved": [
+        "main"
+      ]
+    }
+  },
+  {
+    "question_id": "kwanda_ops_continuity_002",
+    "question_type": "multi-session",
+    "question": "What is the status of the Kwanda landing-page redesign and what was the launch date?",
+    "answer": "The Kwanda landing-page redesign was scoped with sections and copy targeting a Friday launch. The launch date was Friday 2026-04-24. The final checklist was completed the day of launch.",
+    "question_date": "2026/04/27 (Mon) 09:00",
+    "haystack_dates": [
+      "2026/04/19 (Sun) 16:00",
+      "2026/04/22 (Wed) 11:30",
+      "2026/04/24 (Fri) 09:00"
+    ],
+    "haystack_session_ids": [
+      "k15",
+      "k16",
+      "k17"
+    ],
+    "haystack_sessions": [
+      [
+        {
+          "role": "user",
+          "content": "Scoping the Kwanda landing-page redesign. I want hero, three feature sections, social proof, pricing, FAQ, footer. Launch by Friday this week — the 24th.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Scoping: hero, three feature sections, social proof, pricing, FAQ, footer. Launch target Friday 2026-04-24. I'll draft copy for each section and have it back to you by Wednesday for review. Want me to also handle the pricing-tier copy reflecting the agency-tier-only decision from earlier this month?",
+          "has_answer": false
+        },
+        {
+          "role": "user",
+          "content": "Yes, agency-tier only on the pricing section. Don't show the dropped entry tier.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Confirmed. Draft copy by Wednesday, agency-tier-only pricing, launch Friday 2026-04-24.",
+          "has_answer": true
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Where are we on the landing page? What's left?",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Status: copy draft is complete for all six sections — hero, three features, social proof, pricing, FAQ, footer. Pricing reflects agency-tier-only as agreed. Sent it to you Tuesday evening. What's left: your review pass, any copy edits, then engineering handoff for the build. Friday launch still on track if review comes back today.",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Reviewing now. Will turn around tonight.",
+          "has_answer": false
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Launching today. Final checklist.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Launch checklist for the landing-page redesign, Friday 2026-04-24:\n- All six sections built and reviewed: ✓\n- Pricing shows agency-tier only: ✓\n- Social proof testimonials confirmed with customers: ✓\n- Mobile responsive verified: ✓\n- Analytics tracking installed: ✓\n- DNS/redirect from old page configured: ✓\n- Slack #launches announcement drafted: pending your sign-off\n\nReady to go live once you approve the announcement.",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Approved. Ship it.",
+          "has_answer": false
+        }
+      ]
+    ],
+    "answer_session_ids": [
+      "k15",
+      "k16",
+      "k17"
+    ],
+    "metadata": {
+      "project": "Kwanda",
+      "source_dataset": "kwanda-phase3.json",
+      "oracle_style": "LongMemEval-like",
+      "difficulty": "medium",
+      "memory_type": "project_milestone",
+      "agents_involved": [
+        "main"
+      ]
+    }
+  },
+  {
+    "question_id": "kwanda_exact_value_001",
+    "question_type": "fact-recall",
+    "question": "What is the rate limit on the Kwanda customer-facing API, including any burst allowance and exceptions?",
+    "answer": "Kwanda's customer-facing API rate limit is 60 requests per minute per tenant, with a burst allowance of 100, and the limit applies to all `/v1/*` routes except `/v1/health`.",
+    "question_date": "2026/04/26 (Sun) 14:00",
+    "haystack_dates": [
+      "2026/04/10 (Fri) 15:30",
+      "2026/04/22 (Wed) 17:00"
+    ],
+    "haystack_session_ids": [
+      "k18",
+      "k19"
+    ],
+    "haystack_sessions": [
+      [
+        {
+          "role": "user",
+          "content": "Setting the Kwanda customer API rate limit. We agreed: 60 requests per minute per tenant, with a burst allowance up to 100. Applies to all `/v1/*` routes except `/v1/health` which stays unlimited because uptime probes hammer it.",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Recording the rate limit: 60 req/min per tenant, burst allowance 100, applied to all `/v1/*` routes with one exception — `/v1/health` is unlimited because uptime probes need it that way. I'll reference these exact numbers if anyone asks about the limits.",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Yes. These numbers are firm.",
+          "has_answer": false
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Tyrelife is asking about our API rate limits for their integration planning. What do we tell them?",
+          "has_answer": false
+        },
+        {
+          "role": "assistant",
+          "content": "Pulling the limits from earlier — Kwanda customer API is 60 requests per minute per tenant, with a burst allowance of 100. Applies to all `/v1/*` routes except `/v1/health` which is unlimited for uptime probes. That's what we agreed on April 10th, those numbers are firm.",
+          "has_answer": true
+        },
+        {
+          "role": "user",
+          "content": "Send those exact numbers to Anna and Georg.",
+          "has_answer": false
+        }
+      ]
+    ],
+    "answer_session_ids": [
+      "k18",
+      "k19"
+    ],
+    "metadata": {
+      "project": "Kwanda",
+      "source_dataset": "kwanda-phase3.json",
+      "oracle_style": "LongMemEval-like",
+      "difficulty": "medium",
+      "memory_type": "api_config",
+      "agents_involved": [
+        "main"
+      ]
+    }
+  }
+]
